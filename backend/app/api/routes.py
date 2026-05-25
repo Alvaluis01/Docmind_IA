@@ -14,8 +14,8 @@ from app.models.hecho import Hecho
 from app.utils.auth import get_password_hash
 from app.extraction.extractor import extraer_hechos_de_documento
 from app.rules.engine import aplicar_reglas
-from app.utils.dependencies import get_current_user   # JWT para admin
-from app.services.ollama_service import summarize_analysis  # <-- nuevo import
+from app.utils.dependencies import get_current_user
+from app.services.ollama_service import summarize_analysis
 
 router = APIRouter()
 
@@ -28,39 +28,13 @@ def save_upload_file(upload_file: UploadFile, base_dir: str = "storage") -> str:
         shutil.copyfileobj(upload_file.file, buffer)
     return file_path
 
-# Función para obtener o crear usuario/empresa por defecto (SIN JWT)
-def get_or_create_default_user(db: Session) -> Usuario:
-    empresa = db.query(Empresa).filter(Empresa.nit == "000000000").first()
-    if not empresa:
-        empresa = Empresa(nombre="Empresa Default", nit="000000000")
-        db.add(empresa)
-        db.commit()
-        db.refresh(empresa)
-    user = db.query(Usuario).filter(Usuario.email == "dev@docmind.ai").first()
-    if not user:
-        user = Usuario(
-            email="dev@docmind.ai",
-            hashed_password=get_password_hash("devpass"),
-            nombre_completo="Developer",
-            empresa_id=empresa.id,
-            rol="admin",
-            is_active=True
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    return user
-
-# ----------------------------------------------------------------------
-# Endpoint de subida (SIN autenticación, usa usuario por defecto)
-# ----------------------------------------------------------------------
 @router.post("/upload")
 async def upload_document(
     file: UploadFile = File(...),
     regla_ids: Optional[List[int]] = None,
     generate_summary: bool = False,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)   # ← Autenticación JWT
+    current_user: Usuario = Depends(get_current_user)
 ):
     empresa_id = current_user.empresa_id
     user_id = current_user.id
@@ -85,6 +59,7 @@ async def upload_document(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en extracción: {str(e)}")
 
+    # Obtener reglas
     if regla_ids:
         reglas = db.query(Regla).filter(
             Regla.id.in_(regla_ids),
@@ -96,6 +71,10 @@ async def upload_document(
             Regla.empresa_id == empresa_id,
             Regla.activa == True
         ).all()
+
+    # Fallback: si no hay reglas para esta empresa, usar las de la empresa por defecto (id=1)
+    if not reglas:
+        reglas = db.query(Regla).filter(Regla.empresa_id == 1, Regla.activa == True).all()
 
     try:
         resultados = aplicar_reglas(hechos, reglas)
@@ -110,7 +89,7 @@ async def upload_document(
     extracted_chars = sum(len(h.fuente) for h in hechos) if hechos else 0
     max_score = 15
 
-    active_rules_map = {} 
+    active_rules_map = {}
     for r in resultados:
         for line in r.get("justificacion", []):
             match = re.search(r"'([^']+)'\s*:\s*\+(\d+)", line)
@@ -128,10 +107,8 @@ async def upload_document(
         porcentaje = (min(score, max_score) / max_score) * 100
         confidence = int(min(98, porcentaje))
 
-    # Generar resumen con IA si se solicita
     summary = None
     if generate_summary and hechos:
-        # Construir un texto breve con los hechos principales (límite para no saturar el prompt)
         hechos_texto = "\n".join([f"{h.entidad_nombre} - {h.atributo}: {h.valor}" for h in hechos[:20]])
         summary = await summarize_analysis(hechos_texto, score, max_score)
 
@@ -142,15 +119,18 @@ async def upload_document(
         "activeRules": active_rules,
         "totalRules": total_rules,
         "confidence": confidence,
-        "summary": summary,                     # <-- nuevo campo
+        "summary": summary,
         "documento_id": nuevo_doc.id,
         "nombre": nuevo_doc.nombre_original,
     }
 
+# El resto de endpoints (GET /documents, /document/{doc_id}, /rules, /stats, etc.)
+# se mantienen igual que en tu versión original. No es necesario cambiarlos.
+
 @router.get("/documents")
 def list_my_documents(
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)   # protegido
+    current_user: Usuario = Depends(get_current_user)
 ):
     docs = db.query(Documento).filter(Documento.empresa_id == current_user.empresa_id).all()
     return docs
@@ -221,13 +201,11 @@ async def update_rule(
     return {"message": "Regla actualizada"}
 
 # ========== ENDPOINTS DE ELIMINACIÓN ==========
-
 @router.delete("/documents/clear")
 def delete_all_my_documents(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    """Elimina todos los documentos del usuario actual (física y BD)."""
     docs = db.query(Documento).filter(Documento.empresa_id == current_user.empresa_id).all()
     for doc in docs:
         if os.path.exists(doc.ruta_almacenamiento):

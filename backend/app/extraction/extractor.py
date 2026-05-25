@@ -22,11 +22,13 @@ def extraer_hechos_de_documento(db: Session, documento: Documento, session_id: s
     nombre_match = re.search(r'^([A-Z][a-záéíóúñ]+ [A-Z][a-záéíóúñ]+)', texto)
     nombre = nombre_match.group(1) if nombre_match else "Desconocido"
 
+    # Experiencia: atributo "experiencia_anos" (coincide con la regla)
     exp_match = re.search(r'Experiencia:\s*.*?(\d+)\s*años', texto, re.IGNORECASE | re.DOTALL)
     if not exp_match:
         exp_match = re.search(r'Experiencia:.*?(\d+)\s*años', texto, re.IGNORECASE | re.DOTALL)
     experiencia = int(exp_match.group(1)) if exp_match else None
 
+    # Tecnologías: atributo "tecnologia"
     tech_line = re.search(r'Tecnologías:\s*(.+)', texto, re.IGNORECASE)
     tecnologias = set()
     if tech_line:
@@ -49,20 +51,44 @@ def extraer_hechos_de_documento(db: Session, documento: Documento, session_id: s
                 tecnologias.add(tk)
 
     hechos = []
-    h_nom = Hecho(session_id=session_id, documento_id=documento.id, entidad_nombre=nombre,
-                  atributo="nombre", valor=nombre, fuente="extraccion", empresa_id=documento.empresa_id)
+    # Nombre
+    h_nom = Hecho(
+        session_id=session_id,
+        documento_id=documento.id,
+        entidad_nombre=nombre,
+        atributo="nombre",
+        valor=nombre,
+        fuente="extraccion",
+        empresa_id=documento.empresa_id
+    )
     db.add(h_nom)
     hechos.append(h_nom)
 
+    # Experiencia
     if experiencia is not None:
-        h_exp = Hecho(session_id=session_id, documento_id=documento.id, entidad_nombre=nombre,
-                      atributo="experiencia_anios", valor=str(experiencia), fuente="extraccion", empresa_id=documento.empresa_id)
+        h_exp = Hecho(
+            session_id=session_id,
+            documento_id=documento.id,
+            entidad_nombre=nombre,
+            atributo="experiencia_anos",
+            valor=str(experiencia),
+            fuente="extraccion",
+            empresa_id=documento.empresa_id
+        )
         db.add(h_exp)
         hechos.append(h_exp)
 
+    # Tecnologías
     for tech in tecnologias:
-        h_tech = Hecho(session_id=session_id, documento_id=documento.id, entidad_nombre=nombre,
-                       atributo="tecnologia", valor=tech, fuente="extraccion", empresa_id=documento.empresa_id)
+        h_tech = Hecho(
+            session_id=session_id,
+            documento_id=documento.id,
+            entidad_nombre=nombre,
+            atributo="tecnologia",
+            valor=tech,
+            fuente="extraccion",
+            empresa_id=documento.empresa_id
+        )
         db.add(h_tech)
         hechos.append(h_tech)
 

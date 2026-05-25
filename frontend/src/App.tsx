@@ -555,39 +555,55 @@ function AppContent() {
 
   // ── Upload file with duplicate check ──────────────────────────────────────
   async function analyzeFile(file: File) {
-    const alreadyUploaded = results.some(r => r.fileName === file.name && r.status === "done");
-    if (alreadyUploaded) {
-      showToast(`El archivo "${file.name}" ya ha sido subido`, "warning");
+  const alreadyUploaded = results.some(r => r.fileName === file.name && r.status === "done");
+  if (alreadyUploaded) {
+    showToast(`El archivo "${file.name}" ya ha sido subido`, "warning");
+    return;
+  }
+  const tempId = `${file.name}-${Date.now()}-${Math.random()}`;
+  setResults(prev => [...prev, {
+    id: tempId, docId: 0, fileName: file.name, fileSize: (file.size / 1024).toFixed(1),
+    extractedChars: 0, score: 0, maxScore: 15,
+    activeRules: [], totalRules: 0, confidence: 0, status: "loading",
+  }]);
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch(`${API_BASE}/upload`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    if (response.status === 409) {
+      const errorData = await response.json();
+      showToast(errorData.detail || "El archivo ya existe", "warning");
+      setResults(prev => prev.filter(r => r.id !== tempId));
       return;
     }
-    const tempId = `${file.name}-${Date.now()}-${Math.random()}`;
-    setResults(prev => [...prev, {
-      id: tempId, docId: 0, fileName: file.name, fileSize: (file.size / 1024).toFixed(1),
-      extractedChars: 0, score: 0, maxScore: 15,
-      activeRules: [], totalRules: 0, confidence: 0, status: "loading",
-    }]);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await fetch(`${API_BASE}/upload`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      if (response.status === 409) {
-        const errorData = await response.json();
-        showToast(errorData.detail || "El archivo ya existe", "warning");
-        setResults(prev => prev.filter(r => r.id !== tempId));
-        return;
-      }
-      if (!response.ok) throw new Error();
-      showToast(`"${file.name}" subido correctamente`, "success");
-      await loadDocuments();
-    } catch {
-      setResults(prev => prev.map(r => r.id === tempId ? { ...r, status: "error" } : r));
-      showToast(`Error al subir "${file.name}"`, "error");
+    if (!response.ok) throw new Error();
+    const data = await response.json();
+    // Actualizar el resultado temporal con los datos reales
+    setResults(prev => prev.map(r => 
+      r.id === tempId ? {
+        ...r,
+        extractedChars: data.extractedChars ?? 0,
+        score: data.score ?? 0,
+        maxScore: data.maxScore ?? 15,
+        activeRules: data.activeRules ?? [],
+        totalRules: data.totalRules ?? 0,
+        confidence: data.confidence ?? 0,
+        status: "done",
+      } : r
+    ));
+    if (data.documento_id) {
+      setUploadedDocIds(prev => [...prev, data.documento_id]);
     }
+    // IMPORTANTE: No llamar a loadDocuments() aquí
+  } catch {
+    setResults(prev => prev.map(r => r.id === tempId ? { ...r, status: "error" } : r));
+    showToast(`Error al subir "${file.name}"`, "error");
   }
+}
 
   function handleFiles(files: FileList | null) {
     if (!files) return;
