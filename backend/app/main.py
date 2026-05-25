@@ -61,10 +61,9 @@ init_db()
 
 app = FastAPI(title="DocMind AI API", version="1.0.0")
 
-# Middleware personalizado que FORZA headers CORS en TODAS las respuestas (incluyendo OPTIONS y errores)
+# Middleware personalizado para CORS
 class ForceCORSMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # Si es solicitud OPTIONS, respondemos inmediatamente con headers CORS
         if request.method == "OPTIONS":
             response = Response()
             response.headers["Access-Control-Allow-Origin"] = "*"
@@ -72,7 +71,6 @@ class ForceCORSMiddleware(BaseHTTPMiddleware):
             response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
             response.headers["Access-Control-Allow-Credentials"] = "true"
             return response
-        # Para otros métodos, procesamos normalmente y luego agregamos headers
         response = await call_next(request)
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
@@ -81,15 +79,6 @@ class ForceCORSMiddleware(BaseHTTPMiddleware):
         return response
 
 app.add_middleware(ForceCORSMiddleware)
-
-# También agregamos el middleware estándar (por si acaso)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://salmonlike-collectively-zander.ngrok-free.dev"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Incluir routers
 app.include_router(router)

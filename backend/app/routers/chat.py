@@ -78,7 +78,7 @@ async def chat_endpoint(
     else:
         hechos_contexto = "No se han proporcionado documentos para analizar."
 
-    # Construir historial (últimos 10 mensajes)
+    # Construir historial (últimos 10 mensajes de esta conversación)
     mensajes_previos = db.query(Mensaje).filter(
         Mensaje.conversacion_id == conversacion.id
     ).order_by(Mensaje.timestamp.desc()).limit(10).all()
