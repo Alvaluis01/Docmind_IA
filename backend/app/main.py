@@ -63,7 +63,7 @@ app = FastAPI(title="DocMind AI API", version="1.0.0")
 # Configurar CORS: debe ser lo primero después de crear la app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://unrippled-jeanett-impedingly.ngrok-free.dev"],
+    allow_origins=["http://localhost:5173", "https://salmonlike-collectively-zander.ngrok-free.dev"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

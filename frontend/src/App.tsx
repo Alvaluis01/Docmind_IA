@@ -228,7 +228,7 @@ function AppContent() {
   const loadDocuments = async () => {
     if (!token) return;
     try {
-      const res = await fetch("http://localhost:8000/documents", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
