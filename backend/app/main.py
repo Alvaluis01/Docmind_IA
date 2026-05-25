@@ -61,10 +61,10 @@ init_db()
 
 app = FastAPI(title="DocMind AI API", version="1.0.0")
 
-# ========== MIDDLEWARE CORS PERSONALIZADO (FORZAR) ==========
+# Middleware personalizado que FORZA headers CORS en TODAS las respuestas (incluyendo OPTIONS y errores)
 class ForceCORSMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # Manejar preflight OPTIONS
+        # Si es solicitud OPTIONS, respondemos inmediatamente con headers CORS
         if request.method == "OPTIONS":
             response = Response()
             response.headers["Access-Control-Allow-Origin"] = "*"
@@ -72,19 +72,17 @@ class ForceCORSMiddleware(BaseHTTPMiddleware):
             response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
             response.headers["Access-Control-Allow-Credentials"] = "true"
             return response
-        # Procesar la solicitud
+        # Para otros métodos, procesamos normalmente y luego agregamos headers
         response = await call_next(request)
-        # Agregar headers CORS a la respuesta
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
         response.headers["Access-Control-Allow-Credentials"] = "true"
         return response
 
-# Aplicar el middleware personalizado primero
 app.add_middleware(ForceCORSMiddleware)
 
-# También añadir el middleware CORS estándar por si acaso
+# También agregamos el middleware estándar (por si acaso)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
