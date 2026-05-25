@@ -19,7 +19,7 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    history: Optional[List[ChatMessage]] = []
+    conversation_id: Optional[int] = None
     document_ids: Optional[List[int]] = []
 
 @router.post("/")
@@ -28,12 +28,16 @@ async def chat_endpoint(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    # Obtener o crear conversación del usuario
-    conversacion = db.query(Conversacion).filter(
-        Conversacion.usuario_id == current_user.id
-    ).order_by(Conversacion.updated_at.desc()).first()
-    if not conversacion:
-        conversacion = Conversacion(usuario_id=current_user.id, titulo="Chat")
+    # Obtener o crear conversación
+    if request.conversation_id:
+        conversacion = db.query(Conversacion).filter(
+            Conversacion.id == request.conversation_id,
+            Conversacion.usuario_id == current_user.id
+        ).first()
+        if not conversacion:
+            raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    else:
+        conversacion = Conversacion(usuario_id=current_user.id, titulo="Nueva conversación")
         db.add(conversacion)
         db.commit()
         db.refresh(conversacion)
@@ -46,6 +50,11 @@ async def chat_endpoint(
     )
     db.add(user_msg)
     db.commit()
+
+    # Actualizar título si es el primer mensaje
+    if conversacion.titulo == "Nueva conversación" and len(request.message) > 10:
+        conversacion.titulo = request.message[:30] + ("..." if len(request.message) > 30 else "")
+        db.commit()
 
     # Recuperar hechos de los documentos seleccionados
     hechos_contexto = ""
@@ -69,8 +78,11 @@ async def chat_endpoint(
     else:
         hechos_contexto = "No se han proporcionado documentos para analizar."
 
-    # Construir historial
-    history_text = "\n".join([f"{m.role}: {m.content}" for m in request.history[-5:]]) if request.history else ""
+    # Construir historial (últimos 10 mensajes)
+    mensajes_previos = db.query(Mensaje).filter(
+        Mensaje.conversacion_id == conversacion.id
+    ).order_by(Mensaje.timestamp.desc()).limit(10).all()
+    history_text = "\n".join([f"{m.rol}: {m.contenido}" for m in reversed(mensajes_previos)]) if mensajes_previos else ""
 
     full_prompt = f"""Eres un asistente experto en análisis de documentos empresariales. 
 Contexto de documentos subidos:
@@ -93,24 +105,58 @@ Asistente: Responde de manera clara y útil basándote en el contexto de los doc
     db.add(assistant_msg)
     db.commit()
 
-    return {"response": response}
+    return {
+        "response": response,
+        "conversation_id": conversacion.id,
+        "title": conversacion.titulo
+    }
 
-@router.get("/history")
-async def get_chat_history(
+@router.get("/conversations")
+async def get_conversations(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    conversacion = db.query(Conversacion).filter(
+    convs = db.query(Conversacion).filter(
         Conversacion.usuario_id == current_user.id
-    ).order_by(Conversacion.updated_at.desc()).first()
-    if not conversacion:
-        return {"messages": []}
+    ).order_by(Conversacion.updated_at.desc()).all()
+    return [{"id": c.id, "title": c.titulo, "created_at": c.created_at.isoformat()} for c in convs]
+
+@router.get("/conversations/{conv_id}/messages")
+async def get_conversation_messages(
+    conv_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    conv = db.query(Conversacion).filter(
+        Conversacion.id == conv_id,
+        Conversacion.usuario_id == current_user.id
+    ).first()
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
     mensajes = db.query(Mensaje).filter(
-        Mensaje.conversacion_id == conversacion.id
+        Mensaje.conversacion_id == conv_id
     ).order_by(Mensaje.timestamp).all()
     return {
+        "conversation_id": conv.id,
+        "title": conv.titulo,
         "messages": [
             {"role": m.rol, "content": m.contenido, "timestamp": m.timestamp.isoformat()}
             for m in mensajes
         ]
     }
+
+@router.delete("/conversations/{conv_id}")
+async def delete_conversation(
+    conv_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    conv = db.query(Conversacion).filter(
+        Conversacion.id == conv_id,
+        Conversacion.usuario_id == current_user.id
+    ).first()
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    db.delete(conv)
+    db.commit()
+    return {"message": "Conversación eliminada"}
