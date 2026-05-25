@@ -42,6 +42,8 @@ const INITIAL_MESSAGE: ChatMessage = {
   ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
 };
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
 // ── Small components ──────────────────────────────────────────────────────────
 function Badge({ children, type = "info" }: { children: React.ReactNode; type?: BadgeType }) {
   const styles: Record<BadgeType, React.CSSProperties> = {
@@ -180,14 +182,195 @@ function ConfirmDialog({
   );
 }
 
-// ── Admin Dashboard Component (simplificado, igual que antes) ────────────────
+// ── Admin Dashboard Component (completo) ─────────────────────────────────────
 function AdminDashboard({ token }: { token: string | null }) {
-  // ... (mantén tu AdminDashboard completo, sin cambios)
-  // Por brevedad, se omite aquí; usa el que ya tenías funcionando.
-  return <div>AdminDashboard (copia tu código existente aquí)</div>;
+  const [rules, setRules] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>({});
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<any>(null);
+  const [newRule, setNewRule] = useState({
+    nombre: "",
+    descripcion: "",
+    atributo: "experiencia_anios",
+    operador: ">",
+    valor: "",
+    puntaje: 5,
+    activa: true
+  });
+
+  const fetchRules = async () => {
+    if (!token) return;
+    const res = await fetch(`${API_BASE}/rules`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) setRules(await res.json());
+  };
+  const fetchStats = async () => {
+    if (!token) return;
+    const res = await fetch(`${API_BASE}/stats`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) setStats(await res.json());
+  };
+  useEffect(() => {
+    fetchRules();
+    fetchStats();
+  }, [token]);
+
+  const createRule = async () => {
+    const condiciones = [{
+      atributo: newRule.atributo.trim(),
+      operador: newRule.operador.trim(),
+      valor: isNaN(Number(newRule.valor)) ? newRule.valor : Number(newRule.valor)
+    }];
+    const condiciones_json = { condiciones, puntaje: Number(newRule.puntaje) };
+    try {
+      await fetch(`${API_BASE}/rules`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          nombre: newRule.nombre,
+          descripcion: newRule.descripcion,
+          condiciones_json,
+          activa: newRule.activa
+        })
+      });
+      fetchRules();
+      setNewRule({
+        nombre: "", descripcion: "", atributo: "experiencia_anios", operador: ">", valor: "", puntaje: 5, activa: true
+      });
+    } catch(e) { alert("Error al crear regla"); }
+  };
+
+  const deleteRule = async (id: number) => {
+    if (confirm("¿Eliminar esta regla?")) {
+      await fetch(`${API_BASE}/rules/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      fetchRules();
+    }
+  };
+
+  const startEdit = (rule: any) => {
+    const cond = rule.condiciones_json.condiciones?.[0] || {};
+    setEditingId(rule.id);
+    setEditForm({
+      id: rule.id,
+      nombre: rule.nombre,
+      descripcion: rule.descripcion || "",
+      atributo: cond.atributo || "",
+      operador: cond.operador || ">",
+      valor: cond.valor?.toString() || "",
+      puntaje: rule.condiciones_json.puntaje || 0,
+      activa: rule.activa
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditForm(null);
+  };
+
+  const updateRule = async () => {
+    const newCondiciones = [{
+      atributo: editForm.atributo,
+      operador: editForm.operador,
+      valor: isNaN(Number(editForm.valor)) ? editForm.valor : Number(editForm.valor)
+    }];
+    const newCondiciones_json = { condiciones: newCondiciones, puntaje: Number(editForm.puntaje) };
+    try {
+      await fetch(`${API_BASE}/rules/${editForm.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          nombre: editForm.nombre,
+          descripcion: editForm.descripcion,
+          condiciones_json: newCondiciones_json,
+          activa: editForm.activa
+        })
+      });
+      fetchRules();
+      cancelEdit();
+    } catch(e) { alert("Error al actualizar la regla"); }
+  };
+
+  const cardStyle = {
+    background: "var(--color-background-primary)",
+    border: "0.5px solid var(--color-border-tertiary)",
+    borderRadius: "var(--border-radius-lg)",
+    padding: "1rem 1.25rem",
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div style={cardStyle}>
+        <h3 style={{ marginBottom: "0.5rem" }}>📊 Estadísticas</h3>
+        <div>📄 Documentos subidos: {stats.total_documents || 0}</div>
+        <div>⚙️ Reglas activas: {stats.total_rules || 0}</div>
+        <div>👥 Usuarios registrados: {stats.total_users || 0}</div>
+      </div>
+
+      <div style={cardStyle}>
+        <h3 style={{ marginBottom: "0.5rem" }}>📜 Reglas actuales</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          {rules.map(rule => {
+            const cond = rule.condiciones_json.condiciones?.[0] || {};
+            const isEditing = editingId === rule.id;
+            if (isEditing && editForm) {
+              return (
+                <div key={rule.id} style={{ border: "1px solid var(--color-border-info)", padding: "0.75rem", borderRadius: "var(--border-radius-md)", background: "var(--color-background-info)" }}>
+                  <input value={editForm.nombre} onChange={e => setEditForm({ ...editForm, nombre: e.target.value })} placeholder="Nombre" style={{ width: "100%", marginBottom: 8, padding: 6, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+                  <textarea value={editForm.descripcion} onChange={e => setEditForm({ ...editForm, descripcion: e.target.value })} placeholder="Descripción" rows={2} style={{ width: "100%", marginBottom: 8, padding: 6, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 0.8fr", gap: 8, marginBottom: 8 }}>
+                    <input value={editForm.atributo} onChange={e => setEditForm({ ...editForm, atributo: e.target.value })} placeholder="Atributo" style={{ padding: 6, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+                    <input value={editForm.operador} onChange={e => setEditForm({ ...editForm, operador: e.target.value })} placeholder="Operador" style={{ padding: 6, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+                    <input value={editForm.valor} onChange={e => setEditForm({ ...editForm, valor: e.target.value })} placeholder="Valor" style={{ padding: 6, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+                    <input type="number" value={editForm.puntaje} onChange={e => setEditForm({ ...editForm, puntaje: parseInt(e.target.value) || 0 })} placeholder="Puntaje" style={{ padding: 6, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+                  </div>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <input type="checkbox" checked={editForm.activa} onChange={e => setEditForm({ ...editForm, activa: e.target.checked })} /> Activa
+                  </label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={updateRule} style={{ background: "var(--color-background-info)", color: "var(--color-text-info)", border: "none", padding: "6px 12px", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>Guardar</button>
+                    <button onClick={cancelEdit} style={{ background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", border: "0.5px solid var(--color-border-tertiary)", padding: "6px 12px", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>Cancelar</button>
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <div key={rule.id} style={{ border: "1px solid var(--color-border-tertiary)", padding: "0.5rem", borderRadius: "var(--border-radius-md)" }}>
+                <div><strong>{rule.nombre}</strong> {rule.activa ? "✅ Activa" : "❌ Inactiva"}</div>
+                <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>{rule.descripcion || "Sin descripción"}</div>
+                <div style={{ fontSize: 11, marginTop: 4 }}>Condición: {cond.atributo} {cond.operador} {cond.valor} → +{rule.condiciones_json.puntaje} pts</div>
+                <div style={{ display: "flex", gap: "8px", marginTop: 8 }}>
+                  <button onClick={() => startEdit(rule)} style={{ padding: "4px 8px", fontSize: 11, background: "var(--color-background-info)", color: "var(--color-text-info)", border: "none", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>✏️ Editar</button>
+                  <button onClick={() => deleteRule(rule.id)} style={{ padding: "4px 8px", fontSize: 11, background: "var(--color-background-danger)", color: "var(--color-text-danger)", border: "none", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>🗑️ Eliminar</button>
+                </div>
+              </div>
+            );
+          })}
+          {rules.length === 0 && <div style={{ color: "var(--color-text-secondary)" }}>No hay reglas aún. Crea una nueva.</div>}
+        </div>
+      </div>
+
+      <div style={cardStyle}>
+        <h3 style={{ marginBottom: "0.5rem" }}>➕ Crear nueva regla</h3>
+        <input placeholder="Nombre" value={newRule.nombre} onChange={e => setNewRule({ ...newRule, nombre: e.target.value })} style={{ width: "100%", marginBottom: 8, padding: 6, background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+        <textarea placeholder="Descripción" value={newRule.descripcion} onChange={e => setNewRule({ ...newRule, descripcion: e.target.value })} rows={2} style={{ width: "100%", marginBottom: 8, padding: 6, background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 0.8fr", gap: 8, marginBottom: 8 }}>
+          <input placeholder="Atributo" value={newRule.atributo} onChange={e => setNewRule({ ...newRule, atributo: e.target.value })} style={{ padding: 6, background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+          <input placeholder="Operador" value={newRule.operador} onChange={e => setNewRule({ ...newRule, operador: e.target.value })} style={{ padding: 6, background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+          <input placeholder="Valor" value={newRule.valor} onChange={e => setNewRule({ ...newRule, valor: e.target.value })} style={{ padding: 6, background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+          <input type="number" placeholder="Puntaje" value={newRule.puntaje} onChange={e => setNewRule({ ...newRule, puntaje: parseInt(e.target.value) || 0 })} style={{ padding: 6, background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+        </div>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <input type="checkbox" checked={newRule.activa} onChange={e => setNewRule({ ...newRule, activa: e.target.checked })} /> Activa
+        </label>
+        <button onClick={createRule} style={{ background: "var(--color-background-info)", color: "var(--color-text-info)", border: "none", padding: "6px 12px", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>Crear regla</button>
+      </div>
+    </div>
+  );
 }
 
-// ── Main App component with UX improvements ──────────────────────────────────
+// ── Main App component with UX improvements and dynamic API base ─────────────
 function AppContent() {
   const [tab, setTab] = useState<Tab>("analisis");
   const [dragging, setDragging] = useState(false);
@@ -208,27 +391,21 @@ function AppContent() {
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // UI states for toast and confirm dialog
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
-  const showToast = (message: string, type: ToastType = "info") => {
-    setToast({ message, type });
-  };
-
+  const showToast = (message: string, type: ToastType = "info") => setToast({ message, type });
   const closeToast = () => setToast(null);
-
   const showConfirm = (title: string, message: string, onConfirm: () => void) => {
     setConfirmDialog({ open: true, title, message, onConfirm });
   };
-
   const closeConfirm = () => setConfirmDialog(null);
 
-  // ── Load documents and chat history ────────────────────────────────────────
+  // ── Load documents from backend ────────────────────────────────────────────
   const loadDocuments = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
+      const res = await fetch(`${API_BASE}/documents`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -255,7 +432,7 @@ function AppContent() {
   const loadChatHistory = async () => {
     if (!token) return;
     try {
-      const res = await fetch("http://localhost:8000/chat/history", {
+      const res = await fetch(`${API_BASE}/chat/history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.status === 404) {
@@ -302,7 +479,7 @@ function AppContent() {
   // ── Authentication ──────────────────────────────────────────────────────────
   async function handleLogin() {
     try {
-      const res = await fetch("http://localhost:8000/auth/login", {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: loginEmail, password: loginPassword }),
@@ -321,7 +498,7 @@ function AppContent() {
 
   async function handleRegister() {
     try {
-      const res = await fetch("http://localhost:8000/auth/register", {
+      const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registerData),
@@ -339,11 +516,11 @@ function AppContent() {
     } catch (err) { showToast("Error de conexión", "error"); }
   }
 
-  // ── Delete functions with confirmation and toast ───────────────────────────
+  // ── Delete functions ───────────────────────────────────────────────────────
   const deleteDocument = async (docId: number, fileName: string) => {
     showConfirm("Eliminar documento", `¿Deseas eliminar "${fileName}" permanentemente?`, async () => {
       try {
-        const res = await fetch(`http://localhost:8000/document/${docId}`, {
+        const res = await fetch(`${API_BASE}/document/${docId}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -361,7 +538,7 @@ function AppContent() {
   const deleteAllDocuments = async () => {
     showConfirm("Eliminar todos los documentos", "Esta acción eliminará TODOS los documentos subidos. ¿Continuar?", async () => {
       try {
-        const res = await fetch("http://localhost:8000/documents/clear", {
+        const res = await fetch(`${API_BASE}/documents/clear`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -376,7 +553,7 @@ function AppContent() {
     });
   };
 
-  // ── Upload file with duplicate check and toast ─────────────────────────────
+  // ── Upload file with duplicate check ──────────────────────────────────────
   async function analyzeFile(file: File) {
     const alreadyUploaded = results.some(r => r.fileName === file.name && r.status === "done");
     if (alreadyUploaded) {
@@ -392,7 +569,7 @@ function AppContent() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const response = await fetch("http://localhost:8000/upload", {
+      const response = await fetch(`${API_BASE}/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -417,7 +594,7 @@ function AppContent() {
     Array.from(files).forEach(f => analyzeFile(f));
   }
 
-  // ── Chat ──────────────────────────────────────────────────────────────────
+  // ── Chat with context ─────────────────────────────────────────────────────
   async function sendMessage() {
     const text = input.trim();
     if (!text || chatLoading) return;
@@ -430,7 +607,7 @@ function AppContent() {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setChatLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/chat", {
+      const response = await fetch(`${API_BASE}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -481,7 +658,7 @@ function AppContent() {
     "¿Qué tecnologías aparecen en los documentos?",
   ];
 
-  // ── Render Análisis (con botones mejorados) ────────────────────────────────
+  // ── Render Análisis (same as before, but with dynamic base) ────────────────
   function renderAnalisis() {
     const dzStyle: React.CSSProperties = dragging
       ? { border: "1.5px dashed var(--color-text-info)", background: "var(--color-background-info)" }
@@ -577,7 +754,6 @@ function AppContent() {
                         🗑️
                       </button>
                     </div>
-
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: "0.75rem" }}>
                       <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "0.5rem 0.75rem" }}>
                         <div style={{ fontSize: 10, color: "var(--color-text-secondary)", marginBottom: 2 }}>Puntaje</div>
@@ -592,7 +768,6 @@ function AppContent() {
                         <div style={{ fontSize: 18, fontWeight: 500 }}>{result.confidence}%</div>
                       </div>
                     </div>
-
                     <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: "0.75rem" }}>
                       <ScoreRing score={result.score} max={result.maxScore} />
                       <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "0.6rem 0.75rem" }}>
@@ -622,7 +797,6 @@ function AppContent() {
           </div>
         </div>
 
-        {/* Chat lateral (sin cambios) */}
         <div style={{ ...card, display: "flex", flexDirection: "column", height: "calc(100vh - 200px)", minHeight: 480, position: "sticky", top: "1rem", padding: "0.75rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "0.75rem", paddingBottom: "0.75rem", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
             <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--color-background-info)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -674,7 +848,7 @@ function AppContent() {
     );
   }
 
-  // ── Render Ranking (sin cambios) ──────────────────────────────────────────
+  // ── Render Ranking ─────────────────────────────────────────────────────────
   function renderRanking() {
     const done = results.filter(r => r.status === "done").sort((a,b) => b.score - a.score);
     if (done.length === 0) {
@@ -704,7 +878,7 @@ function AppContent() {
     );
   }
 
-  // ── Render Status (sin cambios) ───────────────────────────────────────────
+  // ── Render Status (MVP) ────────────────────────────────────────────────────
   function renderStatus() {
     const services = [
       { label: "Frontend", desc: "React + TypeScript + Vite", completed: true },
@@ -750,6 +924,7 @@ function AppContent() {
     );
   }
 
+  // ── Render FAQ ─────────────────────────────────────────────────────────────
   function renderFaq() {
     const faqs = [
       { q: "¿A quién reporto si el sistema falla?", a: "Escríbenos a 📧 alvaradoluis2002@gmail.com indicando el archivo, error y captura. Respuesta en <24h." },
@@ -786,7 +961,7 @@ function AppContent() {
             <GoogleLogin
               onSuccess={async (credentialResponse) => {
                 try {
-                  const res = await fetch("http://localhost:8000/auth/google", {
+                  const res = await fetch(`${API_BASE}/auth/google`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ credential: credentialResponse.credential }),

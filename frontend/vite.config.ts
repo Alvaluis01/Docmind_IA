@@ -6,10 +6,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0', // Permite conexiones desde cualquier IP en tu red local
-    allowedHosts: [
-      'unrippled-jeanett-impedingly.ngrok-free.dev', // Añade tu dominio de ngrok
-      'localhost',
-      '127.0.0.1',
-    ],
+    allowedHosts: ['salmonlike-collectively-zander.ngrok-free.dev', 'localhost', '127.0.0.1'],
   },
 })
