@@ -385,6 +385,7 @@ function AppContent() {
   const [loginPassword, setLoginPassword] = useState("");
   const [registerData, setRegisterData] = useState({ email: "", password: "", nombre_completo: "", empresa_nombre: "", empresa_nit: "" });
   const [isRegister, setIsRegister] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [uploadedDocIds, setUploadedDocIds] = useState<number[]>([]);
   
   // Estados para múltiples chats
@@ -455,7 +456,6 @@ function AppContent() {
   const createNewConversation = async () => {
     if (!token) return;
     try {
-      // Crear una conversación vacía enviando un mensaje vacío? Mejor crear desde backend.
       const res = await fetch(`${API_BASE}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -556,8 +556,15 @@ function AppContent() {
       });
       if (res.ok) {
         const data = await res.json();
+        if (rememberMe) {
+          localStorage.setItem("token", data.access_token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+        } else {
+          sessionStorage.setItem("token", data.access_token);
+          sessionStorage.setItem("user", JSON.stringify(data.user));
+        }
         setToken(data.access_token);
-        localStorage.setItem("token", data.access_token);
+        setUser(data.user);
         setShowLogin(false);
         showToast("Sesión iniciada correctamente", "success");
       } else {
@@ -575,8 +582,10 @@ function AppContent() {
       });
       if (res.ok) {
         const data = await res.json();
-        setToken(data.access_token);
         localStorage.setItem("token", data.access_token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setToken(data.access_token);
+        setUser(data.user);
         setShowLogin(false);
         showToast("Registro exitoso", "success");
       } else {
@@ -652,6 +661,7 @@ function AppContent() {
       }
       if (!response.ok) throw new Error();
       const data = await response.json();
+      console.log("Respuesta upload:", data); // Depuración
       setResults(prev => prev.map(r => 
         r.id === tempId ? {
           ...r,
@@ -667,8 +677,7 @@ function AppContent() {
       if (data.documento_id) {
         setUploadedDocIds(prev => [...prev, data.documento_id]);
       }
-      // No llamar a loadDocuments() aquí para no perder activeRules temporalmente, pero luego se recarga solo.
-      await loadDocuments(); // Actualiza lista completa desde BD (opcional)
+      await loadDocuments(); // Actualizar lista completa desde BD
     } catch {
       setResults(prev => prev.map(r => r.id === tempId ? { ...r, status: "error" } : r));
       showToast(`Error al subir "${file.name}"`, "error");
@@ -686,7 +695,6 @@ function AppContent() {
     if (!text || chatLoading) return;
     if (!currentConvId) {
       await createNewConversation();
-      // Después de crear, currentConvId se actualiza, pero necesitamos esperar un poco.
       setTimeout(() => sendMessage(), 100);
       return;
     }
@@ -718,7 +726,6 @@ function AppContent() {
         ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages(prev => [...prev, assistantMsg]);
-      // Actualizar título de conversación si cambió
       if (data.title) {
         setConversations(prev => prev.map(c => c.id === currentConvId ? { ...c, title: data.title } : c));
       }
@@ -945,7 +952,7 @@ function AppContent() {
               </div>
             </div>
 
-            {/* Columna derecha: chat (mejorado, con scroll y textarea expansible) */}
+            {/* Columna derecha: chat responsive */}
             <div style={{ ...card, display: "flex", flexDirection: "column", height: "calc(100vh - 200px)", minHeight: 480, position: "sticky", top: "1rem", padding: "0.75rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "0.75rem", paddingBottom: "0.75rem", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
                 <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--color-background-info)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -1113,52 +1120,104 @@ function AppContent() {
 
   function renderAdmin() { return <AdminDashboard token={token} />; }
 
-  // Pantalla de login
+  // ── Pantalla de login rediseñada ──────────────────────────────────────────
   if (showLogin) {
     return (
-      <div style={{ maxWidth: 500, margin: "auto", marginTop: "10vh", background: "var(--color-background-primary)", borderRadius: "var(--border-radius-lg)", padding: "1.5rem", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
-        <h2 style={{ marginBottom: "1rem", textAlign: "center" }}>{isRegister ? "Registro" : "Iniciar sesión"}</h2>
-        {!isRegister ? (
-          <>
-            <input type="email" placeholder="Email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} style={{ width: "100%", marginBottom: "0.75rem", padding: "8px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
-            <input type="password" placeholder="Contraseña" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} style={{ width: "100%", marginBottom: "1rem", padding: "8px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
-            <button onClick={handleLogin} style={{ width: "100%", padding: "8px", background: "var(--color-background-info)", color: "var(--color-text-info)", border: "none", borderRadius: "var(--border-radius-md)", cursor: "pointer", marginBottom: "0.75rem" }}>Ingresar</button>
-            <div style={{ textAlign: "center", fontSize: 12, color: "var(--color-text-secondary)", marginBottom: "0.75rem" }}>o</div>
-            <GoogleLogin
-              onSuccess={async (credentialResponse) => {
-                try {
-                  const res = await fetch(`${API_BASE}/auth/google`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ credential: credentialResponse.credential }),
-                  });
-                  if (res.ok) {
-                    const data = await res.json();
-                    localStorage.setItem("token", data.access_token);
-                    localStorage.setItem("user", JSON.stringify(data.user));
-                    setToken(data.access_token);
-                    setUser(data.user);
-                    setShowLogin(false);
-                    showToast("Bienvenido", "success");
-                  } else alert("Error al autenticar con Google");
-                } catch (err) { console.error(err); showToast("Error de conexión", "error"); }
-              }}
-              onError={() => showToast("Error con Google Login", "error")}
-              useOneTap={false}
-            />
-            <div style={{ textAlign: "center", fontSize: 12, color: "var(--color-text-secondary)", marginTop: "0.75rem" }}>¿No tienes cuenta? <button onClick={() => setIsRegister(true)} style={{ background: "none", border: "none", color: "var(--color-text-info)", cursor: "pointer", textDecoration: "underline" }}>Regístrate</button></div>
-          </>
-        ) : (
-          <>
-            <input type="text" placeholder="Nombre completo" value={registerData.nombre_completo} onChange={e => setRegisterData({ ...registerData, nombre_completo: e.target.value })} style={{ width: "100%", marginBottom: "0.75rem", padding: "8px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)" }} />
-            <input type="email" placeholder="Email" value={registerData.email} onChange={e => setRegisterData({ ...registerData, email: e.target.value })} style={{ width: "100%", marginBottom: "0.75rem", padding: "8px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)" }} />
-            <input type="password" placeholder="Contraseña" value={registerData.password} onChange={e => setRegisterData({ ...registerData, password: e.target.value })} style={{ width: "100%", marginBottom: "0.75rem", padding: "8px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)" }} />
-            <input type="text" placeholder="Empresa nombre" value={registerData.empresa_nombre} onChange={e => setRegisterData({ ...registerData, empresa_nombre: e.target.value })} style={{ width: "100%", marginBottom: "0.75rem", padding: "8px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)" }} />
-            <input type="text" placeholder="Empresa NIT" value={registerData.empresa_nit} onChange={e => setRegisterData({ ...registerData, empresa_nit: e.target.value })} style={{ width: "100%", marginBottom: "1rem", padding: "8px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)" }} />
-            <button onClick={handleRegister} style={{ width: "100%", padding: "8px", background: "var(--color-background-info)", color: "var(--color-text-info)", border: "none", borderRadius: "var(--border-radius-md)", cursor: "pointer", marginBottom: "0.75rem" }}>Registrarse</button>
-            <div style={{ textAlign: "center", fontSize: 12, color: "var(--color-text-secondary)" }}>¿Ya tienes cuenta? <button onClick={() => setIsRegister(false)} style={{ background: "none", border: "none", color: "var(--color-text-info)", cursor: "pointer", textDecoration: "underline" }}>Inicia sesión</button></div>
-          </>
-        )}
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      }}>
+        <div style={{
+          background: "var(--color-background-primary)",
+          borderRadius: "var(--border-radius-lg)",
+          padding: "2rem",
+          width: "100%",
+          maxWidth: 420,
+          boxShadow: "0 20px 35px rgba(0,0,0,0.2)",
+        }}>
+          <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "var(--color-text-primary)" }}>DocMind AI</div>
+            <div style={{ fontSize: 14, color: "var(--color-text-secondary)", marginTop: 4 }}>Inicia sesión para continuar</div>
+          </div>
+
+          {!isRegister ? (
+            <>
+              <div style={{ marginBottom: "1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "0.5rem 1rem", border: "0.5px solid var(--color-border-tertiary)" }}>
+                  <i className="ti ti-user" style={{ fontSize: 18, marginRight: 10, color: "var(--color-text-secondary)" }} />
+                  <input type="email" placeholder="Correo electrónico" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "var(--color-text-primary)", fontSize: 14 }} />
+                </div>
+              </div>
+              <div style={{ marginBottom: "1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "0.5rem 1rem", border: "0.5px solid var(--color-border-tertiary)" }}>
+                  <i className="ti ti-lock" style={{ fontSize: 18, marginRight: 10, color: "var(--color-text-secondary)" }} />
+                  <input type="password" placeholder="Contraseña" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "var(--color-text-primary)", fontSize: 14 }} />
+                </div>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--color-text-secondary)" }}>
+                  <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} /> Recordarme
+                </label>
+                <a href="#" style={{ fontSize: 12, color: "var(--color-text-info)", textDecoration: "none" }}>¿Olvidaste tu contraseña?</a>
+              </div>
+              <button onClick={handleLogin} style={{
+                width: "100%",
+                padding: "10px",
+                background: "linear-gradient(90deg, #667eea, #764ba2)",
+                color: "white",
+                border: "none",
+                borderRadius: "var(--border-radius-md)",
+                fontSize: 16,
+                fontWeight: 500,
+                cursor: "pointer",
+                marginBottom: "1rem",
+              }}>Iniciar sesión</button>
+              <div style={{ textAlign: "center", fontSize: 12, color: "var(--color-text-secondary)", marginBottom: "1rem" }}>o</div>
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  try {
+                    const res = await fetch(`${API_BASE}/auth/google`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ credential: credentialResponse.credential }),
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      localStorage.setItem("token", data.access_token);
+                      localStorage.setItem("user", JSON.stringify(data.user));
+                      setToken(data.access_token);
+                      setUser(data.user);
+                      setShowLogin(false);
+                      showToast("Bienvenido", "success");
+                    } else alert("Error al autenticar con Google");
+                  } catch (err) { console.error(err); showToast("Error de conexión", "error"); }
+                }}
+                onError={() => showToast("Error con Google Login", "error")}
+                useOneTap={false}
+              />
+              <div style={{ textAlign: "center", marginTop: "1rem" }}>
+                <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>¿No tienes cuenta? </span>
+                <button onClick={() => setIsRegister(true)} style={{ background: "none", border: "none", color: "var(--color-text-info)", cursor: "pointer", fontSize: 12, textDecoration: "underline" }}>Regístrate</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <input type="text" placeholder="Nombre completo" value={registerData.nombre_completo} onChange={e => setRegisterData({ ...registerData, nombre_completo: e.target.value })} style={{ width: "100%", marginBottom: "0.75rem", padding: "10px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+              <input type="email" placeholder="Email" value={registerData.email} onChange={e => setRegisterData({ ...registerData, email: e.target.value })} style={{ width: "100%", marginBottom: "0.75rem", padding: "10px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+              <input type="password" placeholder="Contraseña" value={registerData.password} onChange={e => setRegisterData({ ...registerData, password: e.target.value })} style={{ width: "100%", marginBottom: "0.75rem", padding: "10px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+              <input type="text" placeholder="Empresa nombre" value={registerData.empresa_nombre} onChange={e => setRegisterData({ ...registerData, empresa_nombre: e.target.value })} style={{ width: "100%", marginBottom: "0.75rem", padding: "10px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+              <input type="text" placeholder="Empresa NIT" value={registerData.empresa_nit} onChange={e => setRegisterData({ ...registerData, empresa_nit: e.target.value })} style={{ width: "100%", marginBottom: "1rem", padding: "10px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-primary)" }} />
+              <button onClick={handleRegister} style={{ width: "100%", padding: "10px", background: "linear-gradient(90deg, #667eea, #764ba2)", color: "white", border: "none", borderRadius: "var(--border-radius-md)", fontSize: 16, fontWeight: 500, cursor: "pointer", marginBottom: "0.75rem" }}>Registrarse</button>
+              <div style={{ textAlign: "center" }}>
+                <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>¿Ya tienes cuenta? </span>
+                <button onClick={() => setIsRegister(false)} style={{ background: "none", border: "none", color: "var(--color-text-info)", cursor: "pointer", fontSize: 12, textDecoration: "underline" }}>Inicia sesión</button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }

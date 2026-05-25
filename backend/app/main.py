@@ -85,7 +85,7 @@ app.add_middleware(ForceCORSMiddleware)
 # También agregamos el middleware estándar (por si acaso)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173", "https://salmonlike-collectively-zander.ngrok-free.dev"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
