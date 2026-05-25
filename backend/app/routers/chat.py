@@ -100,7 +100,6 @@ async def get_chat_history(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    """Devuelve el historial de mensajes de la última conversación del usuario."""
     conversacion = db.query(Conversacion).filter(
         Conversacion.usuario_id == current_user.id
     ).order_by(Conversacion.updated_at.desc()).first()

@@ -42,7 +42,7 @@ const INITIAL_MESSAGE: ChatMessage = {
   ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
 // ── Small components ──────────────────────────────────────────────────────────
 function Badge({ children, type = "info" }: { children: React.ReactNode; type?: BadgeType }) {
@@ -182,7 +182,7 @@ function ConfirmDialog({
   );
 }
 
-// ── Admin Dashboard Component (completo) ─────────────────────────────────────
+// ── Admin Dashboard Component ────────────────────────────────────────────────
 function AdminDashboard({ token }: { token: string | null }) {
   const [rules, setRules] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({});
@@ -404,10 +404,12 @@ function AppContent() {
   // ── Load documents from backend ────────────────────────────────────────────
   const loadDocuments = async () => {
     if (!token) return;
+    console.log("Cargando documentos con token:", token);
     try {
       const res = await fetch(`${API_BASE}/documents`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log("Respuesta documentos status:", res.status);
       if (res.ok) {
         const docs = await res.json();
         const loadedResults = docs.map((doc: any) => ({
@@ -425,6 +427,12 @@ function AppContent() {
         }));
         setResults(loadedResults);
         setUploadedDocIds(docs.map((d: any) => d.id));
+      } else if (res.status === 401) {
+        console.error("Token inválido o expirado. Cerrando sesión.");
+        localStorage.removeItem("token");
+        setToken(null);
+        setShowLogin(true);
+        showToast("Sesión expirada. Inicia sesión nuevamente.", "warning");
       }
     } catch (err) { console.error(err); showToast("Error al cargar documentos", "error"); }
   };
@@ -452,6 +460,11 @@ function AppContent() {
         } else {
           setMessages([INITIAL_MESSAGE]);
         }
+      } else if (res.status === 401) {
+        console.error("Token inválido o expirado al cargar chat.");
+        localStorage.removeItem("token");
+        setToken(null);
+        setShowLogin(true);
       }
     } catch (err) { console.error(err); }
   };
@@ -658,7 +671,7 @@ function AppContent() {
     "¿Qué tecnologías aparecen en los documentos?",
   ];
 
-  // ── Render Análisis (same as before, but with dynamic base) ────────────────
+  // ── Render Análisis ────────────────────────────────────────────────────────
   function renderAnalisis() {
     const dzStyle: React.CSSProperties = dragging
       ? { border: "1.5px dashed var(--color-text-info)", background: "var(--color-background-info)" }
@@ -754,6 +767,7 @@ function AppContent() {
                         🗑️
                       </button>
                     </div>
+
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: "0.75rem" }}>
                       <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "0.5rem 0.75rem" }}>
                         <div style={{ fontSize: 10, color: "var(--color-text-secondary)", marginBottom: 2 }}>Puntaje</div>
@@ -768,6 +782,7 @@ function AppContent() {
                         <div style={{ fontSize: 18, fontWeight: 500 }}>{result.confidence}%</div>
                       </div>
                     </div>
+
                     <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: "0.75rem" }}>
                       <ScoreRing score={result.score} max={result.maxScore} />
                       <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "0.6rem 0.75rem" }}>
@@ -878,7 +893,7 @@ function AppContent() {
     );
   }
 
-  // ── Render Status (MVP) ────────────────────────────────────────────────────
+  // ── Render Status ─────────────────────────────────────────────────────────
   function renderStatus() {
     const services = [
       { label: "Frontend", desc: "React + TypeScript + Vite", completed: true },
@@ -924,7 +939,7 @@ function AppContent() {
     );
   }
 
-  // ── Render FAQ ─────────────────────────────────────────────────────────────
+  // ── Render FAQ ────────────────────────────────────────────────────────────
   function renderFaq() {
     const faqs = [
       { q: "¿A quién reporto si el sistema falla?", a: "Escríbenos a 📧 alvaradoluis2002@gmail.com indicando el archivo, error y captura. Respuesta en <24h." },
