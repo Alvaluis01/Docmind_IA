@@ -42,7 +42,8 @@ const INITIAL_MESSAGE: ChatMessage = {
   ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
 };
 
-const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
 // ── Small components ──────────────────────────────────────────────────────────
 function Badge({ children, type = "info" }: { children: React.ReactNode; type?: BadgeType }) {
   const styles: Record<BadgeType, React.CSSProperties> = {
