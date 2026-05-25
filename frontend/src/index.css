@@ -1,0 +1,103 @@
+/* ── Reset ─────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Tema claro (por defecto) ──────────────────────── */
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f8fafc;
+  --color-background-tertiary: #f1f5f9;
+  --color-background-info: #eef2ff;
+  --color-background-success: #e6f7e6;
+  --color-background-warning: #fff3e0;
+  --color-background-danger: #fee2e2;
+
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #475569;
+  --color-text-info: #2563eb;
+  --color-text-success: #16a34a;
+  --color-text-warning: #d97706;
+  --color-text-danger: #dc2626;
+
+  --color-border-primary: #e2e8f0;
+  --color-border-tertiary: #cbd5e1;
+  --color-border-info: #bfdbfe;
+  --color-border-success: #bbf7d0;
+  --color-border-warning: #fed7aa;
+  --color-border-danger: #fecaca;
+
+  --border-radius-md: 8px;
+  --border-radius-lg: 16px;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ── Tema oscuro (se activa con clase .dark-theme) ── */
+.dark-theme {
+  --color-background-primary: #1e1e2f;
+  --color-background-secondary: #2a2a3b;
+  --color-background-tertiary: #16161f;
+  --color-background-info: #1e3a5f;
+  --color-background-success: #0f2e1a;
+  --color-background-warning: #3e2a1f;
+  --color-background-danger: #4a1e1e;
+
+  --color-text-primary: #f0f0f0;
+  --color-text-secondary: #b0b0b0;
+  --color-text-info: #6ea8fe;
+  --color-text-success: #6fcf97;
+  --color-text-warning: #f5a623;
+  --color-text-danger: #ff6b6b;
+
+  --color-border-tertiary: #3a3a4a;
+  --color-border-primary: #4a4a5a;
+  --color-border-info: #2c5282;
+  --color-border-success: #2d6a4f;
+  --color-border-warning: #b85b1a;
+  --color-border-danger: #a33b3b;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-background-tertiary);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem;
+  transition: background 0.2s, color 0.2s;
+}
+
+#root {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+/* ── Animaciones reutilizables ───────────────────────── */
+@keyframes slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-5px); }
+}
+textarea::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
