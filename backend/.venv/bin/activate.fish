@@ -29,7 +29,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/Users/luialvarado/Downloads/Docmind_AI/backend/.venv"
+set -gx VIRTUAL_ENV "/Users/luialvarado/Documents/GitHub/Docmind_IA/backend/.venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

@@ -21,6 +21,7 @@ class ChatRequest(BaseModel):
     message: str
     history: Optional[List[ChatMessage]] = []
     document_ids: Optional[List[int]] = []
+    conversation_id: Optional[int] = None
 
 @router.post("/")
 async def chat_endpoint(
@@ -28,12 +29,19 @@ async def chat_endpoint(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    # Obtener o crear conversación del usuario
-    conversacion = db.query(Conversacion).filter(
-        Conversacion.usuario_id == current_user.id
-    ).order_by(Conversacion.updated_at.desc()).first()
+    # Obtener conversación si se proporcionó conversation_id y pertenece al usuario
+    conversacion = None
+    if request.conversation_id:
+        conversacion = db.query(Conversacion).filter(Conversacion.id == request.conversation_id, Conversacion.usuario_id == current_user.id).first()
+        if not conversacion:
+            raise HTTPException(status_code=404, detail="Conversación no encontrada")
+
+    # Si no hay conversación válida, crear una nueva asociada al usuario
     if not conversacion:
-        conversacion = Conversacion(usuario_id=current_user.id, titulo="Chat")
+        conversacion = Conversacion(usuario_id=current_user.id, titulo=("Chat" if not request.message else request.message[:60]))
+        # adjuntar ids de documentos si vienen
+        if request.document_ids:
+            conversacion.document_ids = request.document_ids
         db.add(conversacion)
         db.commit()
         db.refresh(conversacion)
@@ -93,7 +101,7 @@ Asistente: Responde de manera clara y útil basándote en el contexto de los doc
     db.add(assistant_msg)
     db.commit()
 
-    return {"response": response}
+    return {"response": response, "conversation_id": conversacion.id}
 
 @router.get("/history")
 async def get_chat_history(
@@ -114,3 +122,42 @@ async def get_chat_history(
             for m in mensajes
         ]
     }
+
+
+@router.get("/conversations")
+async def list_conversations(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    convs = db.query(Conversacion).filter(Conversacion.usuario_id == current_user.id).order_by(Conversacion.updated_at.desc()).all()
+    return [{"id": c.id, "title": c.titulo or f"Conversación {c.id}", "created_at": c.created_at.isoformat(), "document_ids": c.document_ids or []} for c in convs]
+
+
+@router.get("/conversations/{conv_id}/messages")
+async def get_conversation_messages(
+    conv_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    conv = db.query(Conversacion).filter(Conversacion.id == conv_id, Conversacion.usuario_id == current_user.id).first()
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    mensajes = db.query(Mensaje).filter(Mensaje.conversacion_id == conv_id).order_by(Mensaje.timestamp).all()
+    return {"messages": [{"role": m.rol, "content": m.contenido, "timestamp": m.timestamp.isoformat()} for m in mensajes]}
+
+
+@router.delete("/conversations/{conv_id}")
+async def delete_conversation(
+    conv_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    conv = db.query(Conversacion).filter(Conversacion.id == conv_id, Conversacion.usuario_id == current_user.id).first()
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    # eliminar mensajes asociados
+    db.query(Mensaje).filter(Mensaje.conversacion_id == conv_id).delete()
+    # eliminar la conversación
+    db.delete(conv)
+    db.commit()
+    return {"message": "Conversación eliminada"}

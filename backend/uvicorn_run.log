@@ -1,0 +1,427 @@
+/Users/luialvarado/Documents/GitHub/Docmind_IA/backend/.venv/lib/python3.9/site-packages/google/oauth2/__init__.py:40: FutureWarning: You are using a Python version 3.9 past its end of life. Google will update google-auth with critical bug fixes on a best-effort basis, but not with any other fixes or features. Please upgrade your Python version, and then update google-auth.
+  warnings.warn(eol_message.format("3.9"), FutureWarning)
+/Users/luialvarado/Documents/GitHub/Docmind_IA/backend/.venv/lib/python3.9/site-packages/google/auth/__init__.py:54: FutureWarning: You are using a Python version 3.9 past its end of life. Google will update google-auth with critical bug fixes on a best-effort basis, but not with any other fixes or features. Please upgrade your Python version, and then update google-auth.
+  warnings.warn(eol_message.format("3.9"), FutureWarning)
+/Users/luialvarado/Documents/GitHub/Docmind_IA/backend/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+INFO:     Started server process [10472]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:64475 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64613 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64770 - "POST /auth/login HTTP/1.1" 200 OK
+Error leyendo PDF: No /Root object! - Is this really a PDF?
+
+🔍 Hechos agrupados:
+  Desconocido: {'nombre': 'Desconocido'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+INFO:     127.0.0.1:64775 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64945 - "GET /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64944 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64972 - "DELETE /documents/clear HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64972 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64972 - "OPTIONS /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64979 - "OPTIONS /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64972 - "OPTIONS /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64981 - "OPTIONS /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64984 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64982 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64982 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64981 - "GET /stats HTTP/1.1" 200 OK
+
+🔍 Hechos agrupados:
+  Mariana Torres: {'nombre': 'Mariana Torres', 'tecnologia': 'html css javascript react intereses: desarrollo frontend y diseño ui/ux.'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+
+🔍 Hechos agrupados:
+  Laura Martínez: {'nombre': 'Laura Martínez', 'tecnologia': ['sql', 'python']}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Laura Martínez cumple Sabe Python
+
+🔍 Hechos agrupados:
+  Desconocido: {'nombre': 'Desconocido', 'tecnologia': 'docker'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Desconocido cumple Sabe Docker
+
+🔍 Hechos agrupados:
+  Carlos Ramírez: {'nombre': 'Carlos Ramírez', 'experiencia_anios': '3', 'tecnologia': 'docker kubernetes react aws'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Carlos Ramírez cumple Sabe Docker
+✅ Carlos Ramírez cumple Sabe Kubernetes
+✅ Carlos Ramírez cumple Sabe AWS
+
+🔍 Hechos agrupados:
+  María González: {'nombre': 'María González', 'experiencia_anios': '5', 'tecnologia': ['aws', 'python', 'docker', 'typescript', 'java', 'react', 'sql', 'kubernetes']}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ María González cumple Experiencia > 4 años
+✅ María González cumple Sabe Python
+✅ María González cumple Sabe Docker
+✅ María González cumple Sabe Kubernetes
+✅ María González cumple Sabe AWS
+INFO:     127.0.0.1:65011 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65014 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65016 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65017 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65019 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65011 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65011 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65011 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65011 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65019 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65519 - "OPTIONS /chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65519 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:65521 - "OPTIONS /chat/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49185 - "POST /auth/login HTTP/1.1" 200 OK
+Error leyendo PDF: No /Root object! - Is this really a PDF?
+
+🔍 Hechos agrupados:
+  Desconocido: {'nombre': 'Desconocido'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+INFO:     127.0.0.1:49186 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49187 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65519 - "POST /chat/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65519 - "GET /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65519 - "OPTIONS /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65519 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65519 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49683 - "GET /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49681 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49681 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49681 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49683 - "GET /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49681 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49681 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49681 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49742 - "DELETE /documents/clear HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:49872 - "OPTIONS /document/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49872 - "DELETE /document/1 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:50051 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50052 - "DELETE /documents/clear HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50281 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50282 - "DELETE /documents/clear HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50393 - "OPTIONS /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50394 - "OPTIONS /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50393 - "GET /documents HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:50396 - "GET /chat/conversations HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:50422 - "OPTIONS /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50422 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50422 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50424 - "GET /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50424 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50424 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50452 - "OPTIONS /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50454 - "OPTIONS /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50455 - "OPTIONS /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50452 - "OPTIONS /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50458 - "OPTIONS /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50460 - "OPTIONS /upload HTTP/1.1" 200 OK
+
+🔍 Hechos agrupados:
+  Juan Pérez: {'nombre': 'Juan Pérez', 'tecnologia': ['react', 'python', 'fastapi', 'docker']}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Juan Pérez cumple Sabe Python
+✅ Juan Pérez cumple Sabe Docker
+
+🔍 Hechos agrupados:
+  Juan Pérez: {'nombre': 'Juan Pérez', 'experiencia_anios': '5', 'tecnologia': 'python sql'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Juan Pérez cumple Experiencia > 4 años
+✅ Juan Pérez cumple Sabe Python
+
+🔍 Hechos agrupados:
+  Mariana Torres: {'nombre': 'Mariana Torres', 'tecnologia': 'html css javascript react intereses: desarrollo frontend y diseño ui/ux.'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+
+🔍 Hechos agrupados:
+  Laura Martínez: {'nombre': 'Laura Martínez', 'tecnologia': ['sql', 'python']}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Laura Martínez cumple Sabe Python
+
+🔍 Hechos agrupados:
+  Desconocido: {'nombre': 'Desconocido', 'tecnologia': 'docker'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Desconocido cumple Sabe Docker
+
+🔍 Hechos agrupados:
+  Carlos Ramírez: {'nombre': 'Carlos Ramírez', 'experiencia_anios': '3', 'tecnologia': 'docker kubernetes react aws'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Carlos Ramírez cumple Sabe Docker
+✅ Carlos Ramírez cumple Sabe Kubernetes
+✅ Carlos Ramírez cumple Sabe AWS
+INFO:     127.0.0.1:50455 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50454 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50452 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50460 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50458 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50461 - "POST /upload HTTP/1.1" 200 OK
+
+🔍 Hechos agrupados:
+  María González: {'nombre': 'María González', 'experiencia_anios': '5', 'tecnologia': ['aws', 'python', 'docker', 'typescript', 'java', 'react', 'sql', 'kubernetes']}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ María González cumple Experiencia > 4 años
+✅ María González cumple Sabe Python
+✅ María González cumple Sabe Docker
+✅ María González cumple Sabe Kubernetes
+✅ María González cumple Sabe AWS
+INFO:     127.0.0.1:50455 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50458 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50458 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50458 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50458 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50458 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50458 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50458 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50491 - "OPTIONS /documents/clear HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50491 - "DELETE /documents/clear HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50491 - "GET /documents HTTP/1.1" 200 OK
+
+🔍 Hechos agrupados:
+  Mariana Torres: {'nombre': 'Mariana Torres', 'tecnologia': 'html css javascript react intereses: desarrollo frontend y diseño ui/ux.'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+
+🔍 Hechos agrupados:
+  Desconocido: {'nombre': 'Desconocido', 'tecnologia': 'docker'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Desconocido cumple Sabe Docker
+
+🔍 Hechos agrupados:
+  Laura Martínez: {'nombre': 'Laura Martínez', 'tecnologia': ['sql', 'python']}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Laura Martínez cumple Sabe Python
+
+🔍 Hechos agrupados:
+  Carlos Ramírez: {'nombre': 'Carlos Ramírez', 'experiencia_anios': '3', 'tecnologia': 'docker kubernetes react aws'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Carlos Ramírez cumple Sabe Docker
+✅ Carlos Ramírez cumple Sabe Kubernetes
+✅ Carlos Ramírez cumple Sabe AWS
+INFO:     127.0.0.1:50493 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50662 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50659 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50663 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50659 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50659 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50659 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50659 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50828 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:50828 - "POST /chat/ HTTP/1.1" 200 OK
+
+🔍 Hechos agrupados:
+  Juan Pérez: {'nombre': 'Juan Pérez', 'tecnologia': ['react', 'python', 'fastapi', 'docker']}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Juan Pérez cumple Sabe Python
+✅ Juan Pérez cumple Sabe Docker
+
+🔍 Hechos agrupados:
+  María González: {'nombre': 'María González', 'experiencia_anios': '5', 'tecnologia': ['aws', 'python', 'docker', 'typescript', 'java', 'react', 'sql', 'kubernetes']}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ María González cumple Experiencia > 4 años
+✅ María González cumple Sabe Python
+✅ María González cumple Sabe Docker
+✅ María González cumple Sabe Kubernetes
+✅ María González cumple Sabe AWS
+
+🔍 Hechos agrupados:
+  Juan Pérez: {'nombre': 'Juan Pérez', 'experiencia_anios': '5', 'tecnologia': 'python sql'}
+
+📋 Reglas a evaluar (5):
+  - Experiencia > 4 años → [{'atributo': 'experiencia_anios', 'operador': '>', 'valor': 4}] → +10 pts
+  - Sabe Python → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'python'}] → +8 pts
+  - Sabe Docker → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'docker'}] → +5 pts
+  - Sabe Kubernetes → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'kubernetes'}] → +7 pts
+  - Sabe AWS → [{'atributo': 'tecnologia', 'operador': 'contains', 'valor': 'aws'}] → +6 pts
+✅ Juan Pérez cumple Experiencia > 4 años
+✅ Juan Pérez cumple Sabe Python
+INFO:     127.0.0.1:50830 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51006 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51007 - "POST /upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51007 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51007 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51007 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51117 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:51117 - "POST /chat/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51119 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:51119 - "POST /chat/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51655 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:51655 - "POST /chat/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51655 - "GET /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53633 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53638 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54032 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54033 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54064 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54065 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54065 - "POST /chat/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54218 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54219 - "GET /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54638 - "OPTIONS /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54638 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54638 - "OPTIONS /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54640 - "OPTIONS /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54640 - "GET /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54638 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54638 - "OPTIONS /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54640 - "OPTIONS /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54642 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54642 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54644 - "OPTIONS /chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54644 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54667 - "OPTIONS /chat/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54644 - "POST /chat/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54644 - "GET /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54644 - "OPTIONS /chat/conversations/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54644 - "DELETE /chat/conversations/1 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54644 - "DELETE /chat/conversations/1 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54716 - "POST /chat HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54716 - "POST /chat/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54716 - "GET /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54716 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54716 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54792 - "OPTIONS /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55001 - "OPTIONS /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55003 - "OPTIONS /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55004 - "OPTIONS /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54792 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55006 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54792 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55006 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55799 - "OPTIONS /document/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55799 - "DELETE /document/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55799 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55799 - "OPTIONS /document/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55801 - "DELETE /document/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55801 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55801 - "OPTIONS /documents/clear HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55799 - "DELETE /documents/clear HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55799 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55870 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55871 - "GET /chat/conversations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55872 - "DELETE /chat/conversations/1 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55971 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55972 - "GET /chat/conversations/1/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56267 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [10472]

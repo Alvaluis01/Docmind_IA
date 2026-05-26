@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/luialvarado/Downloads/Docmind_AI/backend/.venv"
+VIRTUAL_ENV="/Users/luialvarado/Documents/GitHub/Docmind_IA/backend/.venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

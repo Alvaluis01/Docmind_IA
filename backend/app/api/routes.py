@@ -11,11 +11,10 @@ from app.models.document import Documento
 from app.models.user import Usuario, Empresa
 from app.models.rules import Regla
 from app.models.hecho import Hecho
-from app.utils.auth import get_password_hash
 from app.extraction.extractor import extraer_hechos_de_documento
 from app.rules.engine import aplicar_reglas
-from app.utils.dependencies import get_current_user   # JWT para admin
-from app.services.ollama_service import summarize_analysis  # <-- nuevo import
+from app.services.ollama_service import summarize_analysis
+from app.utils.auth import get_current_user
 
 router = APIRouter()
 
@@ -28,8 +27,8 @@ def save_upload_file(upload_file: UploadFile, base_dir: str = "storage") -> str:
         shutil.copyfileobj(upload_file.file, buffer)
     return file_path
 
-# Función para obtener o crear usuario/empresa por defecto (SIN JWT)
 def get_or_create_default_user(db: Session) -> Usuario:
+    from app.utils.auth import get_password_hash  # import local para evitar circularidad
     empresa = db.query(Empresa).filter(Empresa.nit == "000000000").first()
     if not empresa:
         empresa = Empresa(nombre="Empresa Default", nit="000000000")
@@ -51,14 +50,11 @@ def get_or_create_default_user(db: Session) -> Usuario:
         db.refresh(user)
     return user
 
-# ----------------------------------------------------------------------
-# Endpoint de subida (SIN autenticación, usa usuario por defecto)
-# ----------------------------------------------------------------------
 @router.post("/upload")
 async def upload_document(
     file: UploadFile = File(...),
     regla_ids: Optional[List[int]] = None,
-    generate_summary: bool = False,        # <-- nuevo parámetro
+    generate_summary: bool = False,
     db: Session = Depends(get_db),
 ):
     current_user = get_or_create_default_user(db)
@@ -105,11 +101,9 @@ async def upload_document(
     score = sum(r.get("puntaje", 0) for r in resultados)
     nuevo_doc.score = score
     nuevo_doc.procesado = True
-    db.commit()
-
-    extracted_chars = sum(len(h.fuente) for h in hechos) if hechos else 0
+    # Puntaje máximo posible (ajustable)
     max_score = 15
-
+    # Mapear reglas activas
     active_rules_map = {}
     for r in resultados:
         for line in r.get("justificacion", []):
@@ -120,18 +114,24 @@ async def upload_document(
                 if rule_name not in active_rules_map:
                     active_rules_map[rule_name] = {"rule": rule_name, "points": points, "active": True}
     active_rules = list(active_rules_map.values())
-    total_rules = len(reglas)
-
+    nuevo_doc.active_rules = active_rules
+    # Calcular confianza y persistir
     if score == 0:
         confidence = 0
     else:
         porcentaje = (min(score, max_score) / max_score) * 100
         confidence = int(min(98, porcentaje))
+    nuevo_doc.confidence = confidence
+    db.commit()
 
-    # Generar resumen con IA si se solicita
+    extracted_chars = sum(len(h.fuente) for h in hechos) if hechos else 0
+
+    # Recalcular active_rules y total_rules para la respuesta (no cambian respecto a lo almacenado)
+    active_rules = list(active_rules_map.values())
+    total_rules = len(reglas)
+
     summary = None
     if generate_summary and hechos:
-        # Construir un texto breve con los hechos principales (límite para no saturar el prompt)
         hechos_texto = "\n".join([f"{h.entidad_nombre} - {h.atributo}: {h.valor}" for h in hechos[:20]])
         summary = await summarize_analysis(hechos_texto, score, max_score)
 
@@ -142,7 +142,7 @@ async def upload_document(
         "activeRules": active_rules,
         "totalRules": total_rules,
         "confidence": confidence,
-        "summary": summary,                     # <-- nuevo campo
+        "summary": summary,
         "documento_id": nuevo_doc.id,
         "nombre": nuevo_doc.nombre_original,
     }
@@ -150,10 +150,22 @@ async def upload_document(
 @router.get("/documents")
 def list_my_documents(
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)   # protegido
+    current_user: Usuario = Depends(get_current_user)
 ):
     docs = db.query(Documento).filter(Documento.empresa_id == current_user.empresa_id).all()
-    return docs
+    # Serializar manualmente para incluir campos nuevos
+    out = []
+    for d in docs:
+        out.append({
+            "id": d.id,
+            "nombre_original": d.nombre_original,
+            "fecha_subida": d.fecha_subida.isoformat() if d.fecha_subida else None,
+            "procesado": d.procesado,
+            "score": d.score,
+            "activeRules": d.active_rules or [],
+            "confidence": d.confidence or 0,
+        })
+    return out
 
 @router.get("/document/{doc_id}")
 def get_document(
@@ -169,9 +181,37 @@ def get_document(
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return doc
 
-# ----------------------------------------------------------------------
-# ADMIN ENDPOINTS (protegidos con JWT)
-# ----------------------------------------------------------------------
+@router.delete("/documents/clear")
+def delete_all_my_documents(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    docs = db.query(Documento).filter(Documento.empresa_id == current_user.empresa_id).all()
+    for doc in docs:
+        if os.path.exists(doc.ruta_almacenamiento):
+            os.remove(doc.ruta_almacenamiento)
+        db.delete(doc)
+    db.commit()
+    return {"message": "Todos los documentos han sido eliminados"}
+
+@router.delete("/document/{doc_id}")
+def delete_document(
+    doc_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    doc = db.query(Documento).filter(
+        Documento.id == doc_id,
+        Documento.empresa_id == current_user.empresa_id
+    ).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    if os.path.exists(doc.ruta_almacenamiento):
+        os.remove(doc.ruta_almacenamiento)
+    db.delete(doc)
+    db.commit()
+    return {"message": "Documento eliminado"}
+
 @router.get("/rules")
 async def get_rules(
     db: Session = Depends(get_db),
@@ -220,39 +260,32 @@ async def update_rule(
     db.commit()
     return {"message": "Regla actualizada"}
 
-# ========== ENDPOINTS DE ELIMINACIÓN ==========
-
-@router.delete("/documents/clear")
-def delete_all_my_documents(
+@router.delete("/rules/{rule_id}")
+async def delete_rule(
+    rule_id: int,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    """Elimina todos los documentos del usuario actual (física y BD)."""
-    docs = db.query(Documento).filter(Documento.empresa_id == current_user.empresa_id).all()
-    for doc in docs:
-        if os.path.exists(doc.ruta_almacenamiento):
-            os.remove(doc.ruta_almacenamiento)
-        db.delete(doc)
+    if current_user.rol != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores")
+    rule = db.query(Regla).filter(Regla.id == rule_id, Regla.empresa_id == current_user.empresa_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="Regla no encontrada")
+    db.delete(rule)
     db.commit()
-    return {"message": "Todos los documentos han sido eliminados"}
+    return {"message": "Regla eliminada"}
 
-@router.delete("/document/{doc_id}")
-def delete_document(
-    doc_id: int,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)
-):
-    doc = db.query(Documento).filter(
-        Documento.id == doc_id,
-        Documento.empresa_id == current_user.empresa_id
-    ).first()
-    if not doc:
-        raise HTTPException(status_code=404, detail="Documento no encontrado")
-    if os.path.exists(doc.ruta_almacenamiento):
-        os.remove(doc.ruta_almacenamiento)
-    db.delete(doc)
-    db.commit()
-    return {"message": "Documento eliminado"}
+@router.get("/test-rules")
+async def test_rules(db: Session = Depends(get_db)):
+    from app.rules.engine import aplicar_reglas
+    from app.models.hecho import Hecho
+    reglas = db.query(Regla).filter(Regla.activa == True).all()
+    hechos = [
+        Hecho(atributo="experiencia_anios", valor="5"),
+        Hecho(atributo="tecnologia", valor="python"),
+    ]
+    resultado = aplicar_reglas(hechos, reglas)
+    return {"resultado": resultado}
 
 @router.get("/stats")
 async def get_stats(

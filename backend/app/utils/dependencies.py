@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.utils.auth import decode_token
+# Import decode_token lazily inside the function to avoid potential circular imports
 from app.models.user import Usuario
 from app.utils.schemas import TokenData
 
@@ -17,6 +17,9 @@ def get_current_user(
         detail="Credenciales inválidas",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    # Import here to prevent circular import problems during app startup/reload
+    from app.utils.auth import decode_token
+
     token_data = decode_token(token)
     if token_data is None:
         raise credentials_exception

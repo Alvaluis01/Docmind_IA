@@ -72,8 +72,15 @@ class ForceCORSMiddleware(BaseHTTPMiddleware):
             response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
             response.headers["Access-Control-Allow-Credentials"] = "true"
             return response
-        # Procesar la solicitud
-        response = await call_next(request)
+        # Procesar la solicitud y asegurarnos de añadir headers CORS incluso
+        # si el handler lanza una excepción (evita respuestas 500 sin CORS).
+        try:
+            response = await call_next(request)
+        except Exception as exc:
+            # Construir una respuesta de error con headers CORS
+            body = b"Internal Server Error"
+            response = Response(content=body, status_code=500)
+            response.headers["Content-Type"] = "text/plain"
         # Agregar headers CORS a la respuesta
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"

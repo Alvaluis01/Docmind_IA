@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Index
 from datetime import datetime
 from app.core.database import Base
+from sqlalchemy import JSON
 
 class Documento(Base):
     __tablename__ = "documentos"
@@ -15,6 +16,9 @@ class Documento(Base):
     tamano_bytes = Column(Integer, default=0)
     procesado = Column(Boolean, default=False)
     score = Column(Integer, default=0)
+    # Reglas activas detectadas y confianza del análisis
+    active_rules = Column(JSON, nullable=True)
+    confidence = Column(Integer, default=0)
 
     # Índices para mejorar rendimiento en consultas frecuentes
     __table_args__ = (

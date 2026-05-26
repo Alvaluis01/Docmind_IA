@@ -9,7 +9,15 @@ def aplicar_reglas(hechos: List[Hecho], reglas: List[Regla]) -> List[Dict[str, A
         ent = h.entidad_nombre
         if ent not in agrupados:
             agrupados[ent] = {}
-        agrupados[ent][h.atributo] = h.valor
+        # Si ya existe el atributo, convertir a lista y agregar
+        if h.atributo in agrupados[ent]:
+            existing = agrupados[ent][h.atributo]
+            if isinstance(existing, list):
+                existing.append(h.valor)
+            else:
+                agrupados[ent][h.atributo] = [existing, h.valor]
+        else:
+            agrupados[ent][h.atributo] = h.valor
 
     print("\n🔍 Hechos agrupados:")
     for ent, attrs in agrupados.items():
@@ -35,24 +43,42 @@ def aplicar_reglas(hechos: List[Hecho], reglas: List[Regla]) -> List[Dict[str, A
                 if val_real is None:
                     cumple = False
                     break
-                # Comparación numérica si es posible
-                try:
-                    v_real = float(val_real)
-                    v_esp = float(val_esp)
-                    if op == ">" and not (v_real > v_esp):
-                        cumple = False
-                    elif op == "<" and not (v_real < v_esp):
-                        cumple = False
-                    elif op == "==" and not (v_real == v_esp):
-                        cumple = False
-                except (ValueError, TypeError):
-                    # Comparación textual
-                    if op == "contains":
-                        if val_esp.lower() not in val_real.lower():
-                            cumple = False
-                    elif op == "==":
-                        if val_esp.lower() != val_real.lower():
-                            cumple = False
+                # Si val_real es lista (múltiples hechos), comprobar si ALGUNO cumple
+                values = val_real if isinstance(val_real, list) else [val_real]
+                matched_any = False
+                for vr in values:
+                    # Comparación numérica si es posible
+                    try:
+                        v_real = float(vr)
+                        v_esp = float(val_esp)
+                        if op == ">" and (v_real > v_esp):
+                            matched_any = True
+                            break
+                        elif op == "<" and (v_real < v_esp):
+                            matched_any = True
+                            break
+                        elif op == "==" and (v_real == v_esp):
+                            matched_any = True
+                            break
+                    except (ValueError, TypeError):
+                        # Comparación textual
+                        try:
+                            vr_low = str(vr).lower()
+                            vesp_low = str(val_esp).lower()
+                        except Exception:
+                            vr_low = str(vr)
+                            vesp_low = str(val_esp)
+                        if op == "contains":
+                            if vesp_low in vr_low:
+                                matched_any = True
+                                break
+                        elif op == "==":
+                            if vesp_low == vr_low:
+                                matched_any = True
+                                break
+                if not matched_any:
+                    cumple = False
+                    break
             if cumple:
                 puntaje += puntaje_regla
                 justificaciones.append(f"Cumple '{regla.nombre}': +{puntaje_regla} pts")
