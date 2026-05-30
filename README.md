@@ -53,7 +53,7 @@ Docmind_AI/
 │   │   │   ├── dependencies.py    # Dependencias comunes
 │   │   │   └── schemas.py         # Esquemas Pydantic
 │   │   └── main.py                # Punto de entrada de la aplicación FastAPI
-│   ├── storage/                   # Directorio donde se guardan los archivos subidos
+│   ├── storage/                   # Archivos subidos por los usuarios
 │   ├── .env                       # Variables de entorno del backend
 │   └── docmind.db                 # Base de datos SQLite (se crea automáticamente)
 └── frontend/
@@ -69,9 +69,9 @@ Docmind_AI/
 
 ---
 
-## 🚀 Instalación paso a paso
+# 🔧 PARTE 1: BACKEND
 
-### 1. Obtener el código
+## Paso 1 — Obtener el código
 
 ```bash
 git clone https://github.com/tu-usuario/docmind-ai.git
@@ -82,24 +82,28 @@ cd docmind-ai
 
 ---
 
-### 2. Backend (FastAPI)
-
-#### 2.1 Crear y activar entorno virtual
+## Paso 2 — Crear y activar el entorno virtual
 
 ```bash
 cd backend
 python -m venv .venv
 ```
 
+Activa el entorno según tu sistema operativo:
+
 ```bash
-# macOS/Linux
+# macOS / Linux
 source .venv/bin/activate
 
 # Windows
 .venv\Scripts\activate
 ```
 
-#### 2.2 Instalar dependencias exactas
+> ✅ Sabrás que está activo cuando veas `(.venv)` al inicio de tu terminal.
+
+---
+
+## Paso 3 — Instalar dependencias del backend
 
 ```bash
 pip install --upgrade pip
@@ -114,15 +118,17 @@ pip install httpx==0.27.0
 pip install google-auth==2.35.0
 ```
 
-> **macOS — error con bcrypt:**
+> ⚠️ **Solo en macOS**, si hay errores con `bcrypt`:
 > ```bash
 > pip uninstall bcrypt passlib -y
 > pip install bcrypt==4.0.1 passlib==1.7.4
 > ```
 
-#### 2.3 Configurar variables de entorno
+---
 
-Crea el archivo `backend/.env`:
+## Paso 4 — Configurar variables de entorno del backend
+
+Crea el archivo `backend/.env` con el siguiente contenido:
 
 ```env
 DATABASE_URL=sqlite:///./docmind.db
@@ -132,31 +138,89 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 OLLAMA_URL=http://localhost:11434
 ```
 
-> ⚠️ En producción, reemplaza `SECRET_KEY` por una clave segura.
+> ⚠️ En producción, reemplaza `SECRET_KEY` por una clave segura generada aleatoriamente.
 
-#### 2.4 Base de datos e inicialización
+**Variables adicionales disponibles:**
 
-La primera ejecución del backend crea automáticamente:
-
-- `docmind.db` con todas las tablas
-- Empresa con NIT `000000000`
-- Usuario administrador: `dev@docmind.ai` / `devpass`
-- 9 reglas de ejemplo (experiencia y tecnologías)
-
-No es necesario ejecutar comandos adicionales.
+| Variable | Descripción |
+|----------|-------------|
+| `OLLAMA_URL` | Por defecto `http://localhost:11434`. Cambia si Ollama corre en otra máquina. |
+| `DATABASE_URL` | Soporta PostgreSQL: `postgresql://user:pass@localhost/dbname` |
 
 ---
 
-### 3. Frontend (React + Vite)
+## Paso 5 — (Opcional) Instalar Ollama para el chat IA
 
-#### 3.1 Instalar dependencias
+> Si no necesitas el chat con IA, omite este paso. El chat devolverá un mensaje de error controlado.
 
 ```bash
-cd ../frontend
+# Instalar desde https://ollama.com y luego ejecutar:
+ollama pull llama3.2:3b
+```
+
+Verifica que funciona correctamente:
+
+```bash
+curl http://localhost:11434/api/generate -d '{"model": "llama3.2:3b", "prompt": "Hola"}'
+```
+
+---
+
+## Paso 6 — Iniciar el servidor backend
+
+> 🖥️ Abre una **terminal exclusiva** para el backend y déjala corriendo.
+
+```bash
+cd backend
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+uvicorn app.main:app --reload --port 8000 --host 0.0.0.0
+```
+
+**Salida esperada en la primera ejecución:**
+
+```
+✅ Empresa por defecto creada.
+✅ Usuario admin creado (dev@docmind.ai / devpass).
+✅ 9 reglas por defecto creadas.
+INFO:     Application startup complete.
+```
+
+> La primera ejecución crea automáticamente:
+> - La base de datos `docmind.db` con todas las tablas
+> - Empresa con NIT `000000000`
+> - Usuario administrador: `dev@docmind.ai` / `devpass`
+> - 9 reglas de ejemplo (experiencia y tecnologías)
+
+---
+
+## Paso 7 — Verificar que el backend funciona
+
+```bash
+# Health check
+curl http://localhost:8000/health
+# Respuesta esperada: {"status":"ok"}
+
+# Login de prueba
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"dev@docmind.ai","password":"devpass"}'
+# Respuesta esperada: un access_token y datos del usuario
+```
+
+---
+
+# 🎨 PARTE 2: FRONTEND
+
+## Paso 8 — Instalar dependencias del frontend
+
+> 🖥️ Abre una **segunda terminal** (el backend debe seguir corriendo en la primera).
+
+```bash
+cd frontend
 npm install
 ```
 
-El `package.json` incluye:
+El `package.json` incluye las siguientes dependencias:
 
 ```json
 {
@@ -175,17 +239,21 @@ El `package.json` incluye:
 }
 ```
 
-#### 3.2 Configurar variables de entorno
+---
 
-Crea el archivo `frontend/.env`:
+## Paso 9 — Configurar variables de entorno del frontend
+
+Crea el archivo `frontend/.env` con el siguiente contenido:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
-#### 3.3 Configuración de Vite (opcional)
+---
 
-El archivo `vite.config.ts`:
+## Paso 10 — (Opcional) Ajustar configuración de Vite
+
+El archivo `vite.config.ts` ya está preconfigurado:
 
 ```ts
 import { defineConfig } from 'vite'
@@ -200,76 +268,43 @@ export default defineConfig({
 })
 ```
 
----
-
-### 4. Ollama para chat IA (opcional)
-
-```bash
-# Instalar desde https://ollama.com
-ollama pull llama3.2:3b
-```
-
-Verificar que funciona:
-
-```bash
-curl http://localhost:11434/api/generate -d '{"model": "llama3.2:3b", "prompt": "Hola"}'
-```
-
-> Si no se instala Ollama, el chat devolverá un mensaje de error controlado.
+> Puedes cambiar el `port` si el `5173` está ocupado.
 
 ---
 
-## ▶️ Ejecución
-
-### Terminal 1 — Backend
-
-```bash
-cd backend
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-uvicorn app.main:app --reload --port 8000 --host 0.0.0.0
-```
-
-Salida esperada (primera ejecución):
-
-```
-✅ Empresa por defecto creada.
-✅ Usuario admin creado (dev@docmind.ai / devpass).
-✅ 9 reglas por defecto creadas.
-INFO:     Application startup complete.
-```
-
-### Terminal 2 — Frontend
+## Paso 11 — Iniciar el servidor frontend
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-### Acceder a la aplicación
-
-- URL: [http://localhost:5173](http://localhost:5173)
-- Credenciales: `dev@docmind.ai` / `devpass`
+> El servidor de desarrollo se iniciará en [http://localhost:5173](http://localhost:5173)
 
 ---
 
-## ✅ Verificación de funcionamiento
+## Paso 12 — Acceder a la aplicación
 
-### Health check y login
+Abre tu navegador y ve a:
 
-```bash
-# Health check
-curl http://localhost:8000/health
-# Respuesta: {"status":"ok"}
-
-# Login
-curl -X POST http://localhost:8000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"dev@docmind.ai","password":"devpass"}'
+```
+http://localhost:5173
 ```
 
-### Probar análisis de un documento
+Inicia sesión con las credenciales por defecto:
 
-Crea un archivo `prueba.txt` con el siguiente contenido exacto:
+| Campo | Valor |
+|-------|-------|
+| Email | `dev@docmind.ai` |
+| Contraseña | `devpass` |
+
+---
+
+# 🧪 PRUEBA COMPLETA DEL SISTEMA
+
+Una vez backend y frontend estén corriendo, prueba el análisis de un documento:
+
+**1.** Crea un archivo `prueba.txt` con el siguiente contenido exacto:
 
 ```
 Juan Perez
@@ -277,15 +312,56 @@ Experiencia: 5 años
 Tecnologías: Python, React, Docker
 ```
 
-Súbelo desde la interfaz (pestaña **Análisis**). El documento mostrará puntaje, reglas activas y confianza (ejemplo: `18/15` y `98%`).
+**2.** Súbelo desde la interfaz en la pestaña **Análisis**.
+
+**3.** En la terminal del backend verás los hechos extraídos y las reglas aplicadas.
+
+**4.** En la interfaz el documento mostrará el resultado: puntaje, reglas activas y confianza.
+
+```
+Ejemplo de resultado esperado: 18/15 — Confianza: 98%
+```
 
 ---
 
-## 🔍 Explicación del código principal
+# 🌐 Referencia de la API
+
+| Método | Endpoint | Descripción | Auth requerida |
+|--------|----------|-------------|----------------|
+| `POST` | `/auth/login` | Iniciar sesión | No |
+| `POST` | `/upload` | Subir documento para análisis | Sí |
+| `GET` | `/documents` | Listar documentos del usuario | Sí |
+| `GET` | `/rules` | Obtener reglas activas | Sí |
+
+**Ejemplos con curl:**
+
+```bash
+# Login
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"dev@docmind.ai","password":"devpass"}'
+
+# Subir documento
+curl -X POST http://localhost:8000/upload \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@/ruta/al/documento.pdf"
+
+# Obtener documentos
+curl -X GET http://localhost:8000/documents \
+  -H "Authorization: Bearer <token>"
+
+# Obtener reglas activas
+curl -X GET http://localhost:8000/rules \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+# 🔍 Explicación del código principal
 
 ### `extractor.py` — Extracción de hechos
 
-Utiliza `pdfplumber` para extraer texto de PDFs, con fallback a lectura como texto plano. Busca nombre, experiencia (años) y tecnologías mediante expresiones regulares flexibles.
+Utiliza `pdfplumber` para extraer texto de PDFs, con fallback a lectura como texto plano. Busca nombre, experiencia (años) y tecnologías mediante expresiones regulares. Guarda los hechos en la tabla `hechos` con los atributos: `nombre`, `experiencia_anios`, `tecnologia`.
 
 ```python
 exp_patterns = [
@@ -329,82 +405,7 @@ Maneja login/registro, subida de documentos, análisis, chat y rankings. Usa `fe
 
 ---
 
-## 🛠️ Solución de problemas comunes
-
-| Error | Causa y solución |
-|-------|-----------------|
-| `Address already in use` (puerto 8000) | Otro proceso usa el puerto. Usa `--port 8001` y actualiza `VITE_API_BASE_URL` en el frontend. |
-| `ERR_CONNECTION_TIMED_OUT` | El backend no está corriendo. Ejecuta `uvicorn` según la sección de ejecución. |
-| `401 Unauthorized` al subir archivo | Token JWT inválido o expirado. Cierra sesión, vuelve a iniciar y limpia `localStorage` (`F12 → Application → Local Storage → Clear`). |
-| Análisis muestra `0/0` y confianza `0%` | Verifica que existan reglas activas (pestaña Admin). Los atributos deben ser `experiencia_anios` y `tecnologia` (sin tildes). El documento debe contener exactamente `"Experiencia:"` y `"Tecnologías:"`. |
-| `Error 500` al subir archivo | Revisa logs del backend. Prueba con un `.txt` en lugar de PDF. Asegura que `storage/` tenga permisos de escritura. |
-| Google Login da error `403` | Normal en desarrollo local. No afecta el login con email. Para eliminarlo, comenta `<GoogleLogin />` en `App.tsx`. |
-| No se ven reglas en el panel Admin | Inicia sesión con un usuario admin (`dev@docmind.ai`). Si no aparecen, reinicia el backend. |
-
----
-
-## 🔧 Comandos útiles para mantenimiento
-
-**Reiniciar base de datos:**
-
-```bash
-rm backend/docmind.db
-# Luego reinicia el backend
-```
-
-**Reinstalar dependencias del backend desde cero:**
-
-```bash
-pip uninstall -y -r <(pip freeze)
-pip install fastapi uvicorn sqlalchemy python-jose[cryptography] passlib[bcrypt] python-multipart pdfplumber httpx google-auth
-# En macOS: bcrypt==4.0.1 passlib==1.7.4
-```
-
-**Reconstruir frontend:**
-
-```bash
-cd frontend
-rm -rf node_modules package-lock.json
-npm install
-```
-
----
-
-## 🌐 Ejemplos de uso de la API
-
-**Login:**
-
-```bash
-curl -X POST http://localhost:8000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"dev@docmind.ai","password":"devpass"}'
-```
-
-**Subir documento (requiere token):**
-
-```bash
-curl -X POST http://localhost:8000/upload \
-  -H "Authorization: Bearer <token>" \
-  -F "file=@/ruta/al/documento.pdf"
-```
-
-**Obtener documentos del usuario:**
-
-```bash
-curl -X GET http://localhost:8000/documents \
-  -H "Authorization: Bearer <token>"
-```
-
-**Obtener reglas activas:**
-
-```bash
-curl -X GET http://localhost:8000/rules \
-  -H "Authorization: Bearer <token>"
-```
-
----
-
-## 🧪 Código de ejemplo — Motor de reglas (pruebas unitarias)
+# 🧪 Pruebas unitarias — Motor de reglas
 
 ```python
 from app.rules.engine import aplicar_reglas
@@ -426,32 +427,69 @@ db.close()
 
 ---
 
-## ⚙️ Configuración de entorno de desarrollo
+# 🚨 Solución de problemas comunes
 
-### Variables de entorno adicionales
+| Error | Causa y solución |
+|-------|-----------------|
+| `Address already in use` (puerto 8000) | Otro proceso usa el puerto. Usa `--port 8001` y actualiza `VITE_API_BASE_URL=http://localhost:8001` en `frontend/.env`. |
+| `ERR_CONNECTION_TIMED_OUT` | El backend no está corriendo. Ejecuta `uvicorn` según el Paso 6. |
+| `401 Unauthorized` al subir archivo | Token JWT expirado. Cierra sesión, vuelve a iniciar y limpia `localStorage` (`F12 → Application → Local Storage → Clear`). |
+| Análisis muestra `0/0` y confianza `0%` | Verifica reglas activas en la pestaña Admin. Los atributos deben ser `experiencia_anios` y `tecnologia` (sin tildes). El documento debe contener exactamente `"Experiencia:"` y `"Tecnologías:"`. |
+| `Error 500` al subir archivo | Revisa logs del backend. Prueba con `.txt` en lugar de PDF. Verifica permisos de escritura en `storage/`. |
+| Google Login da error `403` | Normal en desarrollo local. No afecta el login con email. Para eliminarlo, comenta `<GoogleLogin />` en `App.tsx`. |
+| No se ven reglas en el panel Admin | Inicia sesión con usuario admin (`dev@docmind.ai`). Si no aparecen, reinicia el backend. |
 
-| Variable | Descripción |
-|----------|-------------|
-| `OLLAMA_URL` | Por defecto `http://localhost:11434`. Cambia si Ollama corre en otra máquina. |
-| `DATABASE_URL` | Soporta PostgreSQL: `postgresql://user:pass@localhost/dbname` |
+---
 
-### Modo producción
+# 🔧 Comandos de mantenimiento
+
+**Reiniciar base de datos:**
 
 ```bash
-# Backend
-gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
+rm backend/docmind.db
+# Luego reinicia el backend — se recreará automáticamente
+```
 
-# Frontend
-npm run build
-serve -s dist   # o configurar nginx
+**Reinstalar dependencias del backend desde cero:**
+
+```bash
+pip uninstall -y -r <(pip freeze)
+pip install fastapi uvicorn sqlalchemy python-jose[cryptography] passlib[bcrypt] python-multipart pdfplumber httpx google-auth
+# En macOS: pip install bcrypt==4.0.1 passlib==1.7.4
+```
+
+**Reconstruir frontend:**
+
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
 ```
 
 ---
 
-## 📝 Notas adicionales
+# 🚀 Despliegue en producción
+
+**Backend:**
+
+```bash
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
+```
+
+**Frontend:**
+
+```bash
+npm run build
+serve -s dist   # o configurar con nginx
+```
+
+> Para producción se recomienda migrar de SQLite a **PostgreSQL** configurando `DATABASE_URL` en el `.env` del backend.
+
+---
+
+# 📝 Notas adicionales
 
 - El proyecto está configurado para ejecutarse completamente en local.
-- No requiere conexión a internet después de instalar las dependencias *(excepto Ollama si se usa)*.
+- No requiere conexión a internet tras instalar las dependencias *(excepto Ollama si se usa)*.
 - Los puertos son configurables: backend (`--port`), frontend (`vite.config.ts`).
-- SQLite es adecuado para desarrollo; en producción se recomienda **PostgreSQL**.
 - El motor de reglas es completamente configurable desde el panel de administración.

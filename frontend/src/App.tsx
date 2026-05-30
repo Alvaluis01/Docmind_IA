@@ -40,8 +40,12 @@ type Tab = "analisis" | "ranking" | "status" | "admin" | "faq";
 type BadgeType = "info" | "success" | "warning" | "danger";
 type ToastType = "success" | "error" | "warning" | "info";
 
+<<<<<<< HEAD
 // ── Configuración ─────────────────────────────────────────────────────
 const API_BASE = "http://localhost:8000";   // <- Cambia solo si usas otro puerto o dominio
+=======
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 const INITIAL_MESSAGE: ChatMessage = {
   id: "init",
   role: "assistant",
@@ -49,7 +53,11 @@ const INITIAL_MESSAGE: ChatMessage = {
   ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
 };
 
+<<<<<<< HEAD
 // ── Componentes pequeños ──────────────────────────────────────────────
+=======
+// ── Componentes pequeños ──────────────────────────────────────────────────────
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 function Badge({ children, type = "info" }: { children: React.ReactNode; type?: BadgeType }) {
   const styles: Record<BadgeType, React.CSSProperties> = {
     info: { background: "var(--color-background-info)", color: "var(--color-text-info)" },
@@ -106,8 +114,23 @@ function Toast({ message, type, onClose }: { message: string; type: ToastType; o
   );
 }
 
+<<<<<<< HEAD
 function ConfirmDialog({ open, title, message, onConfirm, onCancel }: {
   open: boolean; title: string; message: string; onConfirm: () => void; onCancel: () => void;
+=======
+function ConfirmDialog({
+  open,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 }) {
   if (!open) return null;
   return (
@@ -136,7 +159,11 @@ function ConfirmDialog({ open, title, message, onConfirm, onCancel }: {
   );
 }
 
+<<<<<<< HEAD
 // ── Admin Dashboard ───────────────────────────────────────────────────
+=======
+// ── Admin Dashboard Component (completo) ─────────────────────────────────────
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 function AdminDashboard({ token }: { token: string | null }) {
   const [rules, setRules] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({});
@@ -269,7 +296,11 @@ function AdminDashboard({ token }: { token: string | null }) {
   );
 }
 
+<<<<<<< HEAD
 // ── Componente principal AppContent ────────────────────────────────────
+=======
+// ── Main App component ──────────────────────────────────────────────────────
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 function AppContent() {
   const [tab, setTab] = useState<Tab>("analisis");
   const [dragging, setDragging] = useState(false);
@@ -284,6 +315,7 @@ function AppContent() {
   const [isRegister, setIsRegister] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [uploadedDocIds, setUploadedDocIds] = useState<number[]>([]);
+<<<<<<< HEAD
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConvId, setCurrentConvId] = useState<number | null>(null);
@@ -293,6 +325,17 @@ function AppContent() {
   const [showSidebar, setShowSidebar] = useState(true);
   const [isCreatingConv, setIsCreatingConv] = useState(false);
 
+=======
+  
+  // Estados para múltiples chats
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConvId, setCurrentConvId] = useState<number | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
+  
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -327,6 +370,7 @@ function AppContent() {
   const showConfirm = (title: string, message: string, onConfirm: () => void) => setConfirmDialog({ open: true, title, message, onConfirm });
   const closeConfirm = () => setConfirmDialog(null);
 
+<<<<<<< HEAD
   // Helper to reliably get the current auth token (state or localStorage)
   const getSavedToken = () => {
     const t = token || localStorage.getItem("token");
@@ -457,6 +501,115 @@ function AppContent() {
         setToken(null);
         setShowLogin(true);
       }
+=======
+  // ── Cargar conversaciones ─────────────────────────────────────────────────
+  const loadConversations = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE}/chat/conversations`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data);
+        if (data.length > 0 && !currentConvId) {
+          setCurrentConvId(data[0].id);
+          loadMessages(data[0].id);
+        } else if (data.length === 0) {
+          setCurrentConvId(null);
+          setMessages([INITIAL_MESSAGE]);
+        }
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const loadMessages = async (convId: number) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE}/chat/conversations/${convId}/messages`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.messages && data.messages.length > 0) {
+          const loadedMessages = data.messages.map((msg: any, idx: number) => ({
+            id: idx.toString(),
+            role: msg.role,
+            text: msg.content,
+            ts: new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          }));
+          setMessages(loadedMessages);
+        } else {
+          setMessages([INITIAL_MESSAGE]);
+        }
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const createNewConversation = async () => {
+    if (!token) return;
+    try {
+      // Crear una conversación vacía enviando un mensaje vacío? Mejor crear desde backend.
+      const res = await fetch(`${API_BASE}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: "Nueva conversación", document_ids: uploadedDocIds }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentConvId(data.conversation_id);
+        setMessages([INITIAL_MESSAGE]);
+        loadConversations();
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const deleteConversation = async (convId: number) => {
+    showConfirm("Eliminar conversación", "¿Deseas eliminar esta conversación permanentemente?", async () => {
+      try {
+        const res = await fetch(`${API_BASE}/chat/conversations/${convId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          if (currentConvId === convId) {
+            setCurrentConvId(null);
+            setMessages([INITIAL_MESSAGE]);
+          }
+          loadConversations();
+          showToast("Conversación eliminada", "success");
+        }
+      } catch (err) { console.error(err); }
+      closeConfirm();
+    });
+  };
+
+  // ── Cargar documentos ─────────────────────────────────────────────────────
+  const loadDocuments = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE}/documents`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const docs = await res.json();
+        const loadedResults = docs.map((doc: any) => ({
+          id: `${doc.id}-${doc.nombre_original}`,
+          docId: doc.id,
+          fileName: doc.nombre_original,
+          fileSize: (doc.tamano_bytes / 1024).toFixed(1),
+          extractedChars: 0,
+          score: doc.score || 0,
+          maxScore: 15,
+          activeRules: [],
+          totalRules: 0,
+          confidence: 0,
+          status: "done" as const,
+        }));
+        setResults(loadedResults);
+        setUploadedDocIds(docs.map((d: any) => d.id));
+      }
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     } catch (err) { showToast("Error al cargar documentos", "error"); }
   };
 
@@ -464,12 +617,28 @@ function AppContent() {
     if (token) {
       loadDocuments();
       loadConversations();
+<<<<<<< HEAD
+=======
+    } else {
+      setResults([]);
+      setMessages([INITIAL_MESSAGE]);
+      setUploadedDocIds([]);
+      setConversations([]);
+      setCurrentConvId(null);
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     }
   }, [token]);
 
   useEffect(() => {
+<<<<<<< HEAD
     if (currentConvId && token) loadMessages(currentConvId);
   }, [currentConvId, token]);
+=======
+    if (currentConvId) {
+      loadMessages(currentConvId);
+    }
+  }, [currentConvId]);
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -480,8 +649,13 @@ function AppContent() {
     else document.documentElement.classList.remove("dark-theme");
   }, [isDark]);
 
+<<<<<<< HEAD
   // Autenticación
   const handleLogin = async () => {
+=======
+  // ── Authentication ─────────────────────────────────────────────────────────
+  async function handleLogin() {
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
@@ -529,7 +703,11 @@ function AppContent() {
     }
   };
 
+<<<<<<< HEAD
   // Eliminar documentos
+=======
+  // ── Eliminar documentos ────────────────────────────────────────────────────
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
   const deleteDocument = async (docId: number, fileName: string) => {
     showConfirm("Eliminar documento", `¿Deseas eliminar "${fileName}" permanentemente?`, async () => {
       try {
@@ -572,8 +750,13 @@ function AppContent() {
     });
   };
 
+<<<<<<< HEAD
   // Subir archivo
   const analyzeFile = async (file: File) => {
+=======
+  // ── Subir archivo ─────────────────────────────────────────────────────────
+  async function analyzeFile(file: File) {
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     const alreadyUploaded = results.some(r => r.fileName === file.name && r.status === "done");
     if (alreadyUploaded) {
       showToast(`El archivo "${file.name}" ya ha sido subido`, "warning");
@@ -608,6 +791,7 @@ function AppContent() {
       }
       if (!response.ok) throw new Error();
       const data = await response.json();
+<<<<<<< HEAD
       setResults(prev => prev.map(r => r.id === tempId ? {
         ...r,
         extractedChars: data.extractedChars ?? 0,
@@ -620,6 +804,25 @@ function AppContent() {
       } : r));
       if (data.documento_id) setUploadedDocIds(prev => [...prev, data.documento_id]);
       await loadDocuments();
+=======
+      setResults(prev => prev.map(r => 
+        r.id === tempId ? {
+          ...r,
+          extractedChars: data.extractedChars ?? 0,
+          score: data.score ?? 0,
+          maxScore: data.maxScore ?? 15,
+          activeRules: data.activeRules ?? [],
+          totalRules: data.totalRules ?? 0,
+          confidence: data.confidence ?? 0,
+          status: "done",
+        } : r
+      ));
+      if (data.documento_id) {
+        setUploadedDocIds(prev => [...prev, data.documento_id]);
+      }
+      // No llamar a loadDocuments() aquí para no perder activeRules temporalmente, pero luego se recarga solo.
+      await loadDocuments(); // Actualiza lista completa desde BD (opcional)
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     } catch {
       setResults(prev => prev.map(r => r.id === tempId ? { ...r, status: "error" } : r));
       showToast(`Error al subir "${file.name}"`, "error");
@@ -631,6 +834,7 @@ function AppContent() {
     Array.from(files).forEach(f => analyzeFile(f));
   };
 
+<<<<<<< HEAD
   // Chat
   const sendMessage = async () => {
     const text = input.trim();
@@ -669,6 +873,20 @@ function AppContent() {
 
     const tempUserMsg: ChatMessage = {
       id: `temp-${Date.now()}`,
+=======
+  // ── Chat (envía mensaje a la conversación actual) ──────────────────────────
+  async function sendMessage() {
+    const text = input.trim();
+    if (!text || chatLoading) return;
+    if (!currentConvId) {
+      await createNewConversation();
+      // Después de crear, currentConvId se actualiza, pero necesitamos esperar un poco.
+      setTimeout(() => sendMessage(), 100);
+      return;
+    }
+    const tempUserMsg: ChatMessage = {
+      id: Date.now().toString(),
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
       role: "user",
       text,
       ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -681,8 +899,17 @@ function AppContent() {
     try {
       const response = await fetch(`${API_BASE}/chat`, {
         method: "POST",
+<<<<<<< HEAD
         headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ message: text, conversation_id: currentConvId, document_ids: uploadedDocIds }),
+=======
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          message: text,
+          conversation_id: currentConvId,
+          document_ids: uploadedDocIds,
+        }),
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
       });
       if (response.status === 401) {
         showToast("Sesión expirada. Por favor inicia sesión nuevamente.", "error");
@@ -694,6 +921,7 @@ function AppContent() {
       }
       if (!response.ok) throw new Error();
       const data = await response.json();
+<<<<<<< HEAD
       setMessages(prev => {
         const withoutTemp = prev.filter(m => m.id !== tempUserMsg.id);
         const realUserMsg: ChatMessage = { id: `user-${Date.now()}`, role: "user", text, ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) };
@@ -709,6 +937,28 @@ function AppContent() {
       setChatLoading(false);
     }
   };
+=======
+      const assistantMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        text: data.response,
+        ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      setMessages(prev => [...prev, assistantMsg]);
+      // Actualizar título de conversación si cambió
+      if (data.title) {
+        setConversations(prev => prev.map(c => c.id === currentConvId ? { ...c, title: data.title } : c));
+      }
+    } catch {
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        text: "Error de conexión con el asistente.",
+        ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      }]);
+    } finally { setChatLoading(false); }
+  }
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 
   const handleKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
@@ -737,14 +987,23 @@ function AppContent() {
     "¿Qué tecnologías aparecen en los documentos?",
   ];
 
+<<<<<<< HEAD
   // Render Análisis (UI completa)
   const renderAnalisis = () => {
+=======
+  // ── Render Análisis (con sidebar de chats y área de chat mejorada) ─────────
+  function renderAnalisis() {
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     const dzStyle: React.CSSProperties = dragging
       ? { border: "1.5px dashed var(--color-text-info)", background: "var(--color-background-info)" }
       : { border: "1.5px dashed var(--color-border-tertiary)", background: "var(--color-background-secondary)" };
     return (
       <div style={{ display: "flex", gap: "1rem", alignItems: "start" }}>
+<<<<<<< HEAD
         {/* Sidebar conversaciones */}
+=======
+        {/* Sidebar de conversaciones */}
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
         <div style={{
           width: showSidebar ? "260px" : "0px",
           overflow: "hidden",
@@ -758,6 +1017,7 @@ function AppContent() {
             <span style={{ fontSize: 14, fontWeight: 500 }}>Conversaciones</span>
             <button onClick={() => setShowSidebar(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16 }}>✕</button>
           </div>
+<<<<<<< HEAD
           <button onClick={createNewConversation} disabled={isCreatingConv || !token} style={{
             width: "100%", padding: "6px 12px",
             background: "var(--color-background-info)", color: "var(--color-text-info)",
@@ -773,23 +1033,78 @@ function AppContent() {
               }} onClick={() => setCurrentConvId(conv.id)}>
                 <span style={{ fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{conv.title}</span>
                 <button onClick={(e) => { e.stopPropagation(); deleteConversation(conv.id); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-danger)", fontSize: 14 }}>🗑️</button>
+=======
+          <button onClick={createNewConversation} style={{
+            width: "100%",
+            padding: "6px 12px",
+            background: "var(--color-background-info)",
+            color: "var(--color-text-info)",
+            border: "none",
+            borderRadius: "var(--border-radius-md)",
+            cursor: "pointer",
+            marginBottom: "1rem",
+          }}>+ Nueva conversación</button>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {conversations.map(conv => (
+              <div key={conv.id} style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                background: currentConvId === conv.id ? "var(--color-background-info)" : "transparent",
+                borderRadius: "var(--border-radius-md)",
+                padding: "6px 10px",
+                cursor: "pointer",
+              }} onClick={() => setCurrentConvId(conv.id)}>
+                <span style={{ fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                  {conv.title}
+                </span>
+                <button onClick={(e) => { e.stopPropagation(); deleteConversation(conv.id); }} style={{
+                  background: "none", border: "none", cursor: "pointer", color: "var(--color-text-danger)", fontSize: 14
+                }}>🗑️</button>
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
               </div>
             ))}
             {conversations.length === 0 && <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Sin conversaciones</div>}
           </div>
         </div>
 
+<<<<<<< HEAD
         {!showSidebar && <button onClick={() => setShowSidebar(true)} style={{ background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", padding: "4px 8px", cursor: "pointer", fontSize: 12 }}>☰ Chats</button>}
 
+=======
+        {/* Botón para mostrar sidebar si está oculta */}
+        {!showSidebar && (
+          <button onClick={() => setShowSidebar(true)} style={{
+            background: "var(--color-background-secondary)",
+            border: "0.5px solid var(--color-border-tertiary)",
+            borderRadius: "var(--border-radius-md)",
+            padding: "4px 8px",
+            cursor: "pointer",
+            fontSize: 12,
+          }}>☰ Chats</button>
+        )}
+
+        {/* Área principal: subida de documentos + resultados + chat */}
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
         <div style={{ flex: 1 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: "1.5rem", alignItems: "start" }}>
             {/* Columna izquierda: subida y resultados */}
             <div>
+<<<<<<< HEAD
               <div style={{ ...dzStyle, borderRadius: "var(--border-radius-lg)", cursor: "pointer", padding: "1.25rem", marginBottom: "1rem", transition: "all 0.2s ease" }}
                 onClick={() => fileRef.current?.click()}
                 onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}>
+=======
+              <div
+                style={{ ...dzStyle, borderRadius: "var(--border-radius-lg)", cursor: "pointer", padding: "1.25rem", marginBottom: "1rem", transition: "all 0.2s ease" }}
+                onClick={() => fileRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
+              >
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
                 <input ref={fileRef} type="file" accept=".pdf,.docx" multiple style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files)} />
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <i className="ti ti-cloud-upload" style={{ fontSize: 28, color: dragging ? "var(--color-text-info)" : "var(--color-text-secondary)", flexShrink: 0 }} />
@@ -798,10 +1113,38 @@ function AppContent() {
                   <div style={{ marginLeft: "auto" }}><Badge type="info">Multi-archivo</Badge></div>
                 </div>
               </div>
+<<<<<<< HEAD
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                 {results.length > 0 && <button onClick={deleteAllDocuments} style={{ background: "none", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", padding: "5px 12px", fontSize: 12, color: "var(--color-text-danger)", cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><i className="ti ti-trash" style={{ fontSize: 13 }} /> Eliminar todos</button>}
               </div>
               {results.length === 0 && <div style={{ background: "var(--color-background-secondary)", border: "0.5px dashed var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.5rem", textAlign: "center" }}><i className="ti ti-files" style={{ fontSize: 24, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }} /><div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Los resultados de cada documento aparecerán aquí</div></div>}
+=======
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                {results.length > 0 && (
+                  <button onClick={deleteAllDocuments} style={{
+                    background: "none",
+                    border: "0.5px solid var(--color-border-tertiary)",
+                    borderRadius: "var(--border-radius-md)",
+                    padding: "5px 12px",
+                    fontSize: 12,
+                    color: "var(--color-text-danger)",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                  }}><i className="ti ti-trash" style={{ fontSize: 13 }} /> Eliminar todos</button>
+                )}
+              </div>
+
+              {results.length === 0 && (
+                <div style={{ background: "var(--color-background-secondary)", border: "0.5px dashed var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.5rem", textAlign: "center" }}>
+                  <i className="ti ti-files" style={{ fontSize: 24, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }} />
+                  <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Los resultados de cada documento aparecerán aquí</div>
+                </div>
+              )}
+
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {results.map((result) => (
                   <div key={result.id} style={{ animation: "fadeIn 0.3s ease" }}>
@@ -829,8 +1172,16 @@ function AppContent() {
                           <i className="ti ti-file-check" style={{ fontSize: 16, color: "var(--color-text-success)" }} />
                           <span style={{ fontSize: 13, fontWeight: 500, flex: 1 }}>{result.fileName}</span>
                           <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>{result.fileSize} KB</span>
+<<<<<<< HEAD
                           <button onClick={() => deleteDocument(result.docId, result.fileName)} style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", color: "var(--color-text-danger)", padding: "0 4px" }}>🗑️</button>
                         </div>
+=======
+                          <button onClick={() => deleteDocument(result.docId, result.fileName)} style={{
+                            background: "none", border: "none", fontSize: 16, cursor: "pointer", color: "var(--color-text-danger)", padding: "0 4px"
+                          }}>🗑️</button>
+                        </div>
+
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: "0.75rem" }}>
                           <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "0.5rem 0.75rem" }}>
                             <div style={{ fontSize: 10, color: "var(--color-text-secondary)", marginBottom: 2 }}>Puntaje</div>
@@ -845,10 +1196,15 @@ function AppContent() {
                             <div style={{ fontSize: 18, fontWeight: 500 }}>{result.confidence}%</div>
                           </div>
                         </div>
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
                         <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: "0.75rem" }}>
                           <ScoreRing score={result.score} max={result.maxScore} />
                           <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "0.6rem 0.75rem" }}>
                             <div style={{ fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6 }}>Reglas evaluadas</div>
+<<<<<<< HEAD
                             {result.activeRules.length === 0 ? <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Ninguna regla coincidió</div> : result.activeRules.map((r, i) => (
                               <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
                                 <div style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0, background: r.active ? "var(--color-background-success)" : "var(--color-background-secondary)", border: `0.5px solid ${r.active ? "var(--color-text-success)" : "var(--color-border-tertiary)"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>{r.active && <span style={{ color: "var(--color-text-success)", fontSize: 10 }}>✓</span>}</div>
@@ -856,6 +1212,22 @@ function AppContent() {
                                 <span style={{ fontSize: 11, fontWeight: 500, color: r.active ? "var(--color-text-success)" : "var(--color-text-secondary)" }}>+{r.points} pts</span>
                               </div>
                             ))}
+=======
+                            {result.activeRules.length === 0
+                              ? <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Ninguna regla coincidió</div>
+                              : result.activeRules.map((r, i) => (
+                                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
+                                  <div style={{
+                                    width: 16, height: 16, borderRadius: "50%", flexShrink: 0,
+                                    background: r.active ? "var(--color-background-success)" : "var(--color-background-secondary)",
+                                    border: `0.5px solid ${r.active ? "var(--color-text-success)" : "var(--color-border-tertiary)"}`,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                  }}>{r.active && <span style={{ color: "var(--color-text-success)", fontSize: 10 }}>✓</span>}</div>
+                                  <span style={{ flex: 1, fontSize: 12 }}>{r.rule}</span>
+                                  <span style={{ fontSize: 11, fontWeight: 500, color: r.active ? "var(--color-text-success)" : "var(--color-text-secondary)" }}>+{r.points} pts</span>
+                                </div>
+                              ))}
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
                           </div>
                         </div>
                       </div>
@@ -865,6 +1237,7 @@ function AppContent() {
               </div>
             </div>
 
+<<<<<<< HEAD
             {/* Columna derecha: chat */}
             <div style={{ ...card, display: "flex", flexDirection: "column", height: "calc(100vh - 200px)", minHeight: 480, position: "sticky", top: "1rem", padding: "0.75rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "0.75rem", paddingBottom: "0.75rem", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
@@ -876,6 +1249,28 @@ function AppContent() {
                 {messages.map((msg) => (
                   <div key={msg.id} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start", animation: "fadeIn 0.2s ease" }}>
                     <div style={{ maxWidth: "88%", background: msg.role === "user" ? "var(--color-background-info)" : "var(--color-background-secondary)", border: `0.5px solid ${msg.role === "user" ? "var(--color-border-info)" : "var(--color-border-tertiary)"}`, borderRadius: msg.role === "user" ? "var(--border-radius-lg) var(--border-radius-lg) 4px var(--border-radius-lg)" : "var(--border-radius-lg) var(--border-radius-lg) var(--border-radius-lg) 4px", padding: "0.5rem 0.7rem" }}>
+=======
+            {/* Columna derecha: chat (mejorado, con scroll y textarea expansible) */}
+            <div style={{ ...card, display: "flex", flexDirection: "column", height: "calc(100vh - 200px)", minHeight: 480, position: "sticky", top: "1rem", padding: "0.75rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "0.75rem", paddingBottom: "0.75rem", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
+                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--color-background-info)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <i className="ti ti-message-chatbot" style={{ fontSize: 13, color: "var(--color-text-info)" }} />
+                </div>
+                <div><div style={{ fontSize: 12, fontWeight: 500 }}>Asistente IA</div><div style={{ fontSize: 10, color: "var(--color-text-secondary)" }}>Ollama 3B local</div></div>
+                <div style={{ marginLeft: "auto" }}><div style={{ width: 7, height: 7, borderRadius: "50%", background: "#1D9E75" }} /></div>
+              </div>
+
+              <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10, paddingRight: 2 }}>
+                {messages.map((msg) => (
+                  <div key={msg.id} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start", animation: "fadeIn 0.2s ease" }}>
+                    <div style={{
+                      maxWidth: "88%",
+                      background: msg.role === "user" ? "var(--color-background-info)" : "var(--color-background-secondary)",
+                      border: `0.5px solid ${msg.role === "user" ? "var(--color-border-info)" : "var(--color-border-tertiary)"}`,
+                      borderRadius: msg.role === "user" ? "var(--border-radius-lg) var(--border-radius-lg) 4px var(--border-radius-lg)" : "var(--border-radius-lg) var(--border-radius-lg) var(--border-radius-lg) 4px",
+                      padding: "0.5rem 0.7rem",
+                    }}>
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
                       <div style={{ fontSize: 12, lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{msg.text}</div>
                       <div style={{ fontSize: 10, color: "var(--color-text-secondary)", marginTop: 3, textAlign: "right" }}>{msg.ts}</div>
                     </div>
@@ -884,21 +1279,51 @@ function AppContent() {
                 {chatLoading && (
                   <div style={{ display: "flex", animation: "fadeIn 0.2s ease" }}>
                     <div style={{ background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg) var(--border-radius-lg) var(--border-radius-lg) 4px", padding: "0.55rem 0.75rem", display: "flex", alignItems: "center", gap: 4 }}>
+<<<<<<< HEAD
                       {[0, 1, 2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--color-text-secondary)", animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+=======
+                      {[0,1,2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--color-text-secondary)", animation: `bounce 1.2s ease-in-out ${i*0.2}s infinite` }} />)}
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
                     </div>
                   </div>
                 )}
                 <div ref={bottomRef} />
               </div>
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
               {messages.length === 1 && messages[0].id === "init" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 5, margin: "0.6rem 0" }}>
                   {suggestions.map(s => <button key={s} onClick={() => setInput(s)} style={{ background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", padding: "5px 9px", fontSize: 11, color: "var(--color-text-secondary)", cursor: "pointer", textAlign: "left" }}>{s}</button>)}
                 </div>
               )}
+<<<<<<< HEAD
               <div style={{ borderTop: "0.5px solid var(--color-border-tertiary)", paddingTop: "0.6rem" }}>
                 <div style={{ background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", padding: "0.45rem 0.6rem", display: "flex", alignItems: "flex-end", gap: 6 }}>
                   <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey} placeholder="Escribe aquí…" rows={1} style={{ flex: 1, resize: "none", border: "none", outline: "none", background: "transparent", fontSize: 12, color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", lineHeight: 1.5, maxHeight: "150px", overflowY: "auto" }} />
                   <button onClick={sendMessage} disabled={!input.trim() || chatLoading || isCreatingConv} style={{ width: 28, height: 28, borderRadius: "var(--border-radius-md)", background: input.trim() && !chatLoading && !isCreatingConv ? "var(--color-background-info)" : "transparent", border: "none", cursor: (input.trim() && !chatLoading && !isCreatingConv) ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center" }}><i className="ti ti-send" style={{ fontSize: 14, color: input.trim() && !chatLoading && !isCreatingConv ? "var(--color-text-info)" : "var(--color-text-secondary)" }} /></button>
+=======
+
+              <div style={{ borderTop: "0.5px solid var(--color-border-tertiary)", paddingTop: "0.6rem" }}>
+                <div style={{ background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", padding: "0.45rem 0.6rem", display: "flex", alignItems: "flex-end", gap: 6 }}>
+                  <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey} placeholder="Escribe aquí…" rows={1} style={{
+                    flex: 1,
+                    resize: "none",
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    fontSize: 12,
+                    color: "var(--color-text-primary)",
+                    fontFamily: "var(--font-sans)",
+                    lineHeight: 1.5,
+                    maxHeight: "150px",
+                    overflowY: "auto",
+                  }} />
+                  <button onClick={sendMessage} disabled={!input.trim() || chatLoading} style={{ width: 28, height: 28, borderRadius: "var(--border-radius-md)", background: input.trim() && !chatLoading ? "var(--color-background-info)" : "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <i className="ti ti-send" style={{ fontSize: 14, color: input.trim() && !chatLoading ? "var(--color-text-info)" : "var(--color-text-secondary)" }} />
+                  </button>
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
                 </div>
                 <div style={{ fontSize: 10, color: "var(--color-text-secondary)", textAlign: "center", marginTop: 4 }}>Enter para enviar · Shift+Enter nueva línea</div>
               </div>
@@ -938,7 +1363,12 @@ function AppContent() {
     );
   };
 
+<<<<<<< HEAD
   const renderStatus = () => {
+=======
+  // ── Render Status (MVP) ────────────────────────────────────────────────────
+  function renderStatus() {
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     const services = [
       { label: "Frontend", desc: "React + TypeScript + Vite", completed: true },
       { label: "Backend", desc: "FastAPI · puerto 8000", completed: true },
@@ -980,7 +1410,12 @@ function AppContent() {
     );
   };
 
+<<<<<<< HEAD
   const renderFaq = () => {
+=======
+  // ── Render FAQ ─────────────────────────────────────────────────────────────
+  function renderFaq() {
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     const faqs = [
       { q: "¿A quién reporto si el sistema falla?", a: "Escríbenos a 📧 alvaradoluis2002@gmail.com indicando el archivo, error y captura. Respuesta en <24h." },
       { q: "Subí el documento pero nunca cambia a 'Completado'", a: "Espera 30 segundos y recarga. Si persiste, el archivo puede estar corrupto o protegido." },

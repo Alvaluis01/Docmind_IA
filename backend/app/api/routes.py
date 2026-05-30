@@ -27,6 +27,7 @@ def save_upload_file(upload_file: UploadFile, base_dir: str = "storage") -> str:
         shutil.copyfileobj(upload_file.file, buffer)
     return file_path
 
+<<<<<<< HEAD
 def get_or_create_default_user(db: Session) -> Usuario:
     from app.utils.auth import get_password_hash  # import local para evitar circularidad
     empresa = db.query(Empresa).filter(Empresa.nit == "000000000").first()
@@ -50,12 +51,18 @@ def get_or_create_default_user(db: Session) -> Usuario:
         db.refresh(user)
     return user
 
+=======
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 @router.post("/upload")
 async def upload_document(
     file: UploadFile = File(...),
     regla_ids: Optional[List[int]] = None,
     generate_summary: bool = False,
     db: Session = Depends(get_db),
+<<<<<<< HEAD
+=======
+    current_user: Usuario = Depends(get_current_user)
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 ):
     current_user = get_or_create_default_user(db)
     empresa_id = current_user.empresa_id
@@ -92,6 +99,9 @@ async def upload_document(
             Regla.empresa_id == empresa_id,
             Regla.activa == True
         ).all()
+
+    if not reglas:
+        reglas = db.query(Regla).filter(Regla.empresa_id == 1, Regla.activa == True).all()
 
     try:
         resultados = aplicar_reglas(hechos, reglas)
@@ -181,6 +191,7 @@ def get_document(
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return doc
 
+<<<<<<< HEAD
 @router.delete("/documents/clear")
 def delete_all_my_documents(
     db: Session = Depends(get_db),
@@ -212,6 +223,8 @@ def delete_document(
     db.commit()
     return {"message": "Documento eliminado"}
 
+=======
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 @router.get("/rules")
 async def get_rules(
     db: Session = Depends(get_db),
@@ -260,9 +273,14 @@ async def update_rule(
     db.commit()
     return {"message": "Regla actualizada"}
 
+<<<<<<< HEAD
 @router.delete("/rules/{rule_id}")
 async def delete_rule(
     rule_id: int,
+=======
+@router.delete("/documents/clear")
+def delete_all_my_documents(
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):

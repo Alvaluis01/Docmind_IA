@@ -43,6 +43,7 @@ def extraer_hechos_de_documento(db: Session, documento: Documento, session_id: s
         nombre_match = re.search(r'([A-Z][a-záéíóúñ]+ [A-Z][a-záéíóúñ]+)', texto)
     nombre = nombre_match.group(1) if nombre_match else "Candidato"
 
+<<<<<<< HEAD
     # 3. Extraer años de experiencia (patrones flexibles)
     exp_patterns = [
         r'(\d+)\s*años?\s+de\s+experiencia',
@@ -68,6 +69,16 @@ def extraer_hechos_de_documento(db: Session, documento: Documento, session_id: s
             experiencia = 3
 
     # 4. Extraer tecnologías (múltiples patrones)
+=======
+    # Experiencia: atributo "experiencia_anos" (coincide con la regla)
+    exp_match = re.search(r'Experiencia:\s*.*?(\d+)\s*años', texto, re.IGNORECASE | re.DOTALL)
+    if not exp_match:
+        exp_match = re.search(r'Experiencia:.*?(\d+)\s*años', texto, re.IGNORECASE | re.DOTALL)
+    experiencia = int(exp_match.group(1)) if exp_match else None
+
+    # Tecnologías: atributo "tecnologia"
+    tech_line = re.search(r'Tecnologías:\s*(.+)', texto, re.IGNORECASE)
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     tecnologias = set()
     # Buscar línea que comience con "Tecnologías:" o similares
     tech_line_match = re.search(r'(?:Tecnologías?|Habilidades|Skills):\s*(.+?)(?:\n|\.|$|Educación|Experiencia)', texto, re.IGNORECASE | re.DOTALL)
@@ -96,8 +107,12 @@ def extraer_hechos_de_documento(db: Session, documento: Documento, session_id: s
 
     # 5. Crear los hechos y guardarlos en la BD
     hechos = []
+<<<<<<< HEAD
 
     # Hecho: nombre
+=======
+    # Nombre
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     h_nom = Hecho(
         session_id=session_id,
         documento_id=documento.id,
@@ -110,13 +125,21 @@ def extraer_hechos_de_documento(db: Session, documento: Documento, session_id: s
     db.add(h_nom)
     hechos.append(h_nom)
 
+<<<<<<< HEAD
     # Hecho: experiencia (si se encontró)
+=======
+    # Experiencia
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     if experiencia is not None:
         h_exp = Hecho(
             session_id=session_id,
             documento_id=documento.id,
             entidad_nombre=nombre,
+<<<<<<< HEAD
             atributo="experiencia_anios",
+=======
+            atributo="experiencia_anos",
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
             valor=str(experiencia),
             fuente="extraccion",
             empresa_id=documento.empresa_id
@@ -127,7 +150,11 @@ def extraer_hechos_de_documento(db: Session, documento: Documento, session_id: s
     else:
         print("   ⚠️ No se detectó experiencia")
 
+<<<<<<< HEAD
     # Hechos: tecnologías
+=======
+    # Tecnologías
+>>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     for tech in tecnologias:
         h_tech = Hecho(
             session_id=session_id,
