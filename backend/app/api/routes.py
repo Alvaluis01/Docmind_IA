@@ -27,9 +27,8 @@ def save_upload_file(upload_file: UploadFile, base_dir: str = "storage") -> str:
         shutil.copyfileobj(upload_file.file, buffer)
     return file_path
 
-<<<<<<< HEAD
 def get_or_create_default_user(db: Session) -> Usuario:
-    from app.utils.auth import get_password_hash  # import local para evitar circularidad
+    from app.utils.auth import get_password_hash
     empresa = db.query(Empresa).filter(Empresa.nit == "000000000").first()
     if not empresa:
         empresa = Empresa(nombre="Empresa Default", nit="000000000")
@@ -51,23 +50,26 @@ def get_or_create_default_user(db: Session) -> Usuario:
         db.refresh(user)
     return user
 
-=======
->>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 @router.post("/upload")
 async def upload_document(
     file: UploadFile = File(...),
     regla_ids: Optional[List[int]] = None,
     generate_summary: bool = False,
     db: Session = Depends(get_db),
-<<<<<<< HEAD
-=======
-    current_user: Usuario = Depends(get_current_user)
->>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 ):
     current_user = get_or_create_default_user(db)
     empresa_id = current_user.empresa_id
     user_id = current_user.id
 
+    # Verificar duplicado
+    existing = db.query(Documento).filter(
+        Documento.nombre_original == file.filename,
+        Documento.empresa_id == empresa_id
+    ).first()
+    if existing:
+        raise HTTPException(status_code=409, detail=f"El archivo '{file.filename}' ya existe")
+
+    # Guardar archivo
     file_path = save_upload_file(file, base_dir="storage")
     nuevo_doc = Documento(
         nombre_original=file.filename,
@@ -76,18 +78,23 @@ async def upload_document(
         subido_por=user_id,
         tipo=file.filename.split('.')[-1] if '.' in file.filename else '',
         tamano_bytes=os.path.getsize(file_path),
-        procesado=False
+        procesado=False,
+        score=0,
+        active_rules=[],
+        confidence=0
     )
     db.add(nuevo_doc)
     db.commit()
     db.refresh(nuevo_doc)
 
+    # Extraer hechos
     session_id = f"session_{nuevo_doc.id}_{user_id}"
     try:
         hechos = extraer_hechos_de_documento(db, nuevo_doc, session_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en extracción: {str(e)}")
 
+    # Obtener reglas
     if regla_ids:
         reglas = db.query(Regla).filter(
             Regla.id.in_(regla_ids),
@@ -103,55 +110,38 @@ async def upload_document(
     if not reglas:
         reglas = db.query(Regla).filter(Regla.empresa_id == 1, Regla.activa == True).all()
 
+    # Aplicar reglas
     try:
-        resultados = aplicar_reglas(hechos, reglas)
+        resultado = aplicar_reglas(hechos, reglas)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al aplicar reglas: {str(e)}")
 
-    score = sum(r.get("puntaje", 0) for r in resultados)
-    nuevo_doc.score = score
+    # Actualizar documento con los resultados
+    nuevo_doc.score = resultado["score_total"]
+    nuevo_doc.active_rules = resultado["reglas_activas"]
+    nuevo_doc.confidence = resultado["confianza"]
     nuevo_doc.procesado = True
-    # Puntaje máximo posible (ajustable)
-    max_score = 15
-    # Mapear reglas activas
-    active_rules_map = {}
-    for r in resultados:
-        for line in r.get("justificacion", []):
-            match = re.search(r"'([^']+)'\s*:\s*\+(\d+)", line)
-            if match:
-                rule_name = match.group(1)
-                points = int(match.group(2))
-                if rule_name not in active_rules_map:
-                    active_rules_map[rule_name] = {"rule": rule_name, "points": points, "active": True}
-    active_rules = list(active_rules_map.values())
-    nuevo_doc.active_rules = active_rules
-    # Calcular confianza y persistir
-    if score == 0:
-        confidence = 0
-    else:
-        porcentaje = (min(score, max_score) / max_score) * 100
-        confidence = int(min(98, porcentaje))
-    nuevo_doc.confidence = confidence
     db.commit()
 
     extracted_chars = sum(len(h.fuente) for h in hechos) if hechos else 0
-
-    # Recalcular active_rules y total_rules para la respuesta (no cambian respecto a lo almacenado)
-    active_rules = list(active_rules_map.values())
-    total_rules = len(reglas)
+    
+    active_rules = [
+        {"rule": r["nombre"], "points": r["puntaje"], "active": True}
+        for r in resultado["reglas_activas"]
+    ]
 
     summary = None
     if generate_summary and hechos:
         hechos_texto = "\n".join([f"{h.entidad_nombre} - {h.atributo}: {h.valor}" for h in hechos[:20]])
-        summary = await summarize_analysis(hechos_texto, score, max_score)
+        summary = await summarize_analysis(hechos_texto, resultado["score_total"], resultado["max_score"])
 
     return {
         "extractedChars": extracted_chars,
-        "score": score,
-        "maxScore": max_score,
+        "score": resultado["score_total"],
+        "maxScore": resultado["max_score"],
         "activeRules": active_rules,
-        "totalRules": total_rules,
-        "confidence": confidence,
+        "totalRules": resultado["total_reglas"],
+        "confidence": resultado["confianza"],
         "summary": summary,
         "documento_id": nuevo_doc.id,
         "nombre": nuevo_doc.nombre_original,
@@ -163,19 +153,15 @@ def list_my_documents(
     current_user: Usuario = Depends(get_current_user)
 ):
     docs = db.query(Documento).filter(Documento.empresa_id == current_user.empresa_id).all()
-    # Serializar manualmente para incluir campos nuevos
-    out = []
-    for d in docs:
-        out.append({
-            "id": d.id,
-            "nombre_original": d.nombre_original,
-            "fecha_subida": d.fecha_subida.isoformat() if d.fecha_subida else None,
-            "procesado": d.procesado,
-            "score": d.score,
-            "activeRules": d.active_rules or [],
-            "confidence": d.confidence or 0,
-        })
-    return out
+    return [{
+        "id": d.id,
+        "nombre_original": d.nombre_original,
+        "tamano_bytes": d.tamano_bytes,
+        "score": d.score,
+        "procesado": d.procesado,
+        "active_rules": d.active_rules or [],
+        "confidence": d.confidence or 0
+    } for d in docs]
 
 @router.get("/document/{doc_id}")
 def get_document(
@@ -191,7 +177,6 @@ def get_document(
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return doc
 
-<<<<<<< HEAD
 @router.delete("/documents/clear")
 def delete_all_my_documents(
     db: Session = Depends(get_db),
@@ -223,8 +208,6 @@ def delete_document(
     db.commit()
     return {"message": "Documento eliminado"}
 
-=======
->>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
 @router.get("/rules")
 async def get_rules(
     db: Session = Depends(get_db),
@@ -273,14 +256,9 @@ async def update_rule(
     db.commit()
     return {"message": "Regla actualizada"}
 
-<<<<<<< HEAD
 @router.delete("/rules/{rule_id}")
 async def delete_rule(
     rule_id: int,
-=======
-@router.delete("/documents/clear")
-def delete_all_my_documents(
->>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
@@ -292,18 +270,6 @@ def delete_all_my_documents(
     db.delete(rule)
     db.commit()
     return {"message": "Regla eliminada"}
-
-@router.get("/test-rules")
-async def test_rules(db: Session = Depends(get_db)):
-    from app.rules.engine import aplicar_reglas
-    from app.models.hecho import Hecho
-    reglas = db.query(Regla).filter(Regla.activa == True).all()
-    hechos = [
-        Hecho(atributo="experiencia_anios", valor="5"),
-        Hecho(atributo="tecnologia", valor="python"),
-    ]
-    resultado = aplicar_reglas(hechos, reglas)
-    return {"resultado": resultado}
 
 @router.get("/stats")
 async def get_stats(

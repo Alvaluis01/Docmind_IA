@@ -49,6 +49,10 @@ def init_db():
                 ("Sabe Docker", {"condiciones": [{"atributo": "tecnologia", "operador": "contains", "valor": "docker"}], "puntaje": 5}),
                 ("Sabe Kubernetes", {"condiciones": [{"atributo": "tecnologia", "operador": "contains", "valor": "kubernetes"}], "puntaje": 7}),
                 ("Sabe AWS", {"condiciones": [{"atributo": "tecnologia", "operador": "contains", "valor": "aws"}], "puntaje": 6}),
+                ("Experiencia 1-3 años", {"condiciones": [{"atributo": "experiencia_anios", "operador": ">=", "valor": 1}, {"atributo": "experiencia_anios", "operador": "<=", "valor": 3}], "puntaje": 5}),
+                ("Sabe React", {"condiciones": [{"atributo": "tecnologia", "operador": "contains", "valor": "react"}], "puntaje": 8}),
+                ("Sabe JavaScript", {"condiciones": [{"atributo": "tecnologia", "operador": "contains", "valor": "javascript"}], "puntaje": 6}),
+                ("Sabe HTML/CSS", {"condiciones": [{"atributo": "tecnologia", "operador": "contains", "valor": "html"}], "puntaje": 4}),
             ]
             for nombre, cond in reglas_data:
                 db.add(Regla(nombre=nombre, condiciones_json=cond, empresa_id=empresa.id, creada_por=user.id, activa=True))
@@ -71,7 +75,6 @@ class ForceCORSMiddleware(BaseHTTPMiddleware):
             response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
             response.headers["Access-Control-Allow-Credentials"] = "true"
             return response
-<<<<<<< HEAD
         # Procesar la solicitud y asegurarnos de añadir headers CORS incluso
         # si el handler lanza una excepción (evita respuestas 500 sin CORS).
         try:
@@ -82,9 +85,6 @@ class ForceCORSMiddleware(BaseHTTPMiddleware):
             response = Response(content=body, status_code=500)
             response.headers["Content-Type"] = "text/plain"
         # Agregar headers CORS a la respuesta
-=======
-        response = await call_next(request)
->>>>>>> 9c8b9e38f0a170af930a0af21493079adc7fe523
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
@@ -102,3 +102,7 @@ app.include_router(google_auth.router)
 @app.get("/")
 def root():
     return {"message": "DocMind AI funcionando"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}

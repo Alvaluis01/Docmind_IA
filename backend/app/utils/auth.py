@@ -7,14 +7,12 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.user import Usuario
-from typing import Optional
-from app.utils.schemas import TokenData
 
 SECRET_KEY = "tu-secret-key-muy-segura-cambiala-en-produccion"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -50,16 +48,3 @@ def get_current_user(
     if user is None:
         raise credentials_exception
     return user
-
-
-def decode_token(token: str) -> Optional[TokenData]:
-    """Decodifica un JWT y retorna un TokenData o None si es inválido."""
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: Optional[str] = payload.get("sub")
-        empresa_id: Optional[int] = payload.get("empresa_id")
-        if email is None:
-            return None
-        return TokenData(email=email, empresa_id=empresa_id)
-    except JWTError:
-        return None
